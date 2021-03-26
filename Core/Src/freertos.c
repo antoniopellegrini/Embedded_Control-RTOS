@@ -531,19 +531,18 @@ void SensorReadFunc(void const * argument)
 
 
 
+				gyroRawZ = MPU6050_Read_Gyro(mpu_data);
 
-				currentTime = xTaskGetTickCount();
-				elapsedTime = currentTime - previousTime;
 				previousTime = currentTime;
-
-				gyroRawZ = MPU6050_Read_Gyro();
-
-				//apply calibration
+				currentTime = xTaskGetTickCount();
+				elapsedTime = (currentTime - previousTime) / 1000;   //  (/1000) =>  ms->s
 
 
-				gyroZ = (gyroRawZ - mpu_data->mean) * mpu_data->FS_Mult_Factor;
+				//apply calibration and calculate angle
 
-				yaw_new.angle.f[0] = yaw.angle.f[0]+ gyroZ * elapsedTime * 0.001; // elapsedTime/1000 to get seconds
+				gyroZ = (gyroRawZ - mpu_data->mean);
+				yaw_new.angle.f[0] = yaw.angle.f[0] + gyroZ * elapsedTime;
+
 
 
 				//ignore small angles:
@@ -551,9 +550,13 @@ void SensorReadFunc(void const * argument)
 				//MULT_FACTOR depends by Tc
 				// FAI DELLE PROVE PER TROVARE IL MULT_FACT CHE RENDA L'ANGOLO STABILE
 				//
-				//				if((fabs(yaw.angle.f[0]-yaw_new.angle.f[0])<(mpu_data.stdev * MULT_FACTOR))){
+				//				if((fabs(yaw.angle.f[0]-yaw_new.angle.f[0])<(mpu_data.stdev * (1/MULT_FACTOR)))){
 				//					yaw_new.angle.f[0] = yaw.angle.f[0];
-				//				}
+				//				}s
+				// se la differenza tra gli angoli è abbastanza piccola non cambio
+				// Tc alto --> MULT alto
+				// Tc basso --> MULT basso
+
 
 				//normalize the angle between -180° and 180°
 
@@ -565,17 +568,20 @@ void SensorReadFunc(void const * argument)
 				yaw_new.crc = HAL_CRC_Calculate(&hcrc, yaw_new.angle.i,1);
 
 				//send angle to queues
+
 				osMessagePut(Sensor1QueueHandle, (uint32_t) &yaw_new, 100);
 				osMessagePut(Sensor2QueueHandle, (uint32_t) &yaw_new, 100);
 
 
-				yaw.angle.f[0]=yaw_new.angle.f[0];
+
 				yaw.crc = HAL_CRC_Calculate(&hcrc,yaw.angle.i,1);
+
+				yaw.angle.f[0]=yaw_new.angle.f[0];
+
 
 				if(debug_active){
 					osSemaphoreRelease(DebugThreadSemHandle);
 				}
-
 			}
 		}
 		osDelay(1);

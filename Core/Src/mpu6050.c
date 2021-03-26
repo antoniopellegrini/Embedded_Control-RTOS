@@ -86,7 +86,7 @@ MPU6050_StatusTypeDef MPU6050_Init (MPU_Data * mpu_data, uint8_t gyro_fs_select)
 }
 
 
-float MPU6050_Read_Gyro (void)
+float MPU6050_Read_Gyro (MPU_Data * mpu_data)
 {
 	uint8_t Rec_Data[2];
 	uint16_t temp;
@@ -111,7 +111,7 @@ float MPU6050_Read_Gyro (void)
 	//Gx = Gyro_X_RAW/131.0;
 	//Gy = Gyro_Y_RAW/131.0;
 
-	return  temp/131.0;
+	return  (temp/131.0)* mpu_data->FS_Mult_Factor;
 
 }
 
