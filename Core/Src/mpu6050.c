@@ -4,9 +4,9 @@
  *  Created on: Jan 17, 2021
  *      Author: antoniopellegrini
  */
-//test
 
 #include "mpu6050.h"
+
 
 
 #ifdef __GNUC__
@@ -38,7 +38,7 @@ void filter(float *actual_value, float *value, volatile float *array){
 }
 
 
-MPU6050_StatusTypeDef MPU6050_Init (MPU_Data * mpu_data, uint8_t gyro_fs_select)
+MPU6050_StatusTypeDef MPU6050_Init (uint8_t gyro_fs)
 {
 	uint8_t check;
 	uint8_t Data;
@@ -66,11 +66,12 @@ MPU6050_StatusTypeDef MPU6050_Init (MPU_Data * mpu_data, uint8_t gyro_fs_select)
 		// Set Gyroscopic configuration in GYRO_CONFIG Register
 		// XG_ST=0,YG_ST=0,ZG_ST=0, FS_SEL=0 -> ± 250 °/s
 		// shift << 3 to write into FS_SEL (https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Register-Map1.pdf)
-
+		Gyro_FS_Select = gyro_fs;
+		Data = Gyro_FS_Select<<3;
 
 		//FS=[2000, 1000, 500, 250] ---> 2000/250 = 8 ---> fattori moltiplicativi=[8,4,2,1].
 
-		mpu_data->FS_Mult_Factor = pow(2,gyro_fs_select);
+		Gyro_FS_Mult_Factor = pow(2,Gyro_FS_Select);
 
 		HAL_I2C_Mem_Write(&hi2c2, MPU6050_ADDR, GYRO_CONFIG_REG, 1, &Data, 1, 1000);
 
@@ -86,22 +87,19 @@ MPU6050_StatusTypeDef MPU6050_Init (MPU_Data * mpu_data, uint8_t gyro_fs_select)
 }
 
 
-float MPU6050_Read_Gyro (MPU_Data * mpu_data)
+void MPU6050_Read_Gyro (void)
 {
-	uint8_t Rec_Data[2];
-	uint16_t temp;
+
+
+	uint8_t Rec_Data[6];
 
 	// Read 6 BYTES of data starting from GYRO_XOUT_H register
 
-//	HAL_I2C_Mem_Read (&hi2c2, MPU6050_ADDR, GYRO_XOUT_H_REG, 1, Rec_Data, 6, 1000);
-	HAL_I2C_Mem_Read (&hi2c2, MPU6050_ADDR, GYRO_ZOUT_H_REG, 1, Rec_Data, 2, 1000);
+	HAL_I2C_Mem_Read (&hi2c2, MPU6050_ADDR, GYRO_XOUT_H_REG, 1, Rec_Data, 6, 1000);
 
-//	Gyro_X_RAW = (int16_t)(Rec_Data[0] << 8 | Rec_Data [1]);
-//	Gyro_Y_RAW = (int16_t)(Rec_Data[2] << 8 | Rec_Data [3]);
-//	Gyro_Z_RAW = (int16_t)(Rec_Data[4] << 8 | Rec_Data [5]);
-
-	temp = (int16_t)(Rec_Data[0] << 8 | Rec_Data [1]);
-
+	Gyro_X_RAW = (int16_t)(Rec_Data[0] << 8 | Rec_Data [1]);
+	Gyro_Y_RAW = (int16_t)(Rec_Data[2] << 8 | Rec_Data [3]);
+	Gyro_Z_RAW = (int16_t)(Rec_Data[4] << 8 | Rec_Data [5]);
 
 	/*** convert the RAW values into dps (°/s)
 	     we have to divide according to the Full scale value set in FS_SEL
@@ -110,48 +108,49 @@ float MPU6050_Read_Gyro (MPU_Data * mpu_data)
 
 	//Gx = Gyro_X_RAW/131.0;
 	//Gy = Gyro_Y_RAW/131.0;
-
-	return  (temp/131.0)* mpu_data->FS_Mult_Factor;
+	Gz = Gyro_Z_RAW/131.0;
+	//printf("Gyro_Z_RAW: %d\n", Gyro_Z_RAW);
 
 }
 
 
-void MPU6050_Calculate_IMU_Error(MPU_Data * mpu_data, int seconds){
+void MPU6050_Calculate_IMU_Error(int seconds){
 
 	printf("\n	[MPU6050] Start of calibration, calculating biases...\n");
+	int c=0;
+	int numOfIter=200*seconds;
+	float meanArray[numOfIter];
+
+	float variance_sum=0;
 
 
-	/*	Calcolo della varianza con l'algoritmo di Welford
-	 *  https://stats.stackexchange.com/a/235151
-	 */
 
-	int numOfIter = 200 * seconds;
-
-	float delta = 0;
-	float msq = 0;
-	float reading = 0;
-	float mean = 0;			//media
-	float variance = 0;		//varianza
-	float std_dev = 0;		//deviazione standard
-
-	mean = MPU6050_Read_Gyro(mpu_data);
-
-	for(int i = 0; i < numOfIter; i++){
-		reading = MPU6050_Read_Gyro(mpu_data);
-		delta = reading - mean;
-		mean = mean + delta / (i+1);
-		msq = msq + delta  * (reading - mean);
+	while (c < numOfIter) {
+		MPU6050_Read_Gyro();
+		meanArray[c]=Gz;
+		GyroErrorZ = GyroErrorZ + Gz;
+		c++;
 		osDelay(5);
+
 	}
+	GyroErrorZ = GyroErrorZ / numOfIter; //media
+	//printf("Gz_drift_bias=%f\n",GyroErrorZ);
 
-	variance = msq / (numOfIter - 1);
-	std_dev = sqrtf(variance);
+	c=0;
+	//calcolo varianza e deviazione standard
+	while (c < numOfIter) {
+		MPU6050_Read_Gyro();
+		variance_sum = variance_sum + pow(( meanArray[c] - GyroErrorZ),2);
+		c++;
+	}
+	Gz_variance = variance_sum / numOfIter; //
+	Gz_stdev=sqrt(Gz_variance);
 
-	mpu_data->mean = mean;
-	mpu_data->variance = variance;
-	mpu_data->stdev = std_dev;
+	//printf("variance=%f, stdev=%f\n",Gz_variance,Gz_stdev);
+	osDelay(1000);
 
-
+	Z_error = GyroErrorZ;
 	printf("	[MPU6050] End of calibration.\n\n");
+
 
 }

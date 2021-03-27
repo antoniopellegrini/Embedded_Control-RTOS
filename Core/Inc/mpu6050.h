@@ -5,18 +5,40 @@
  *      Author: antoniopellegrini
  */
 
+
+
 #ifndef INC_MPU6050_H_
 #define INC_MPU6050_H_
 
 
+//#include "main.h"
 #include "stdint.h"
 #include "math.h"
 #include "stdio.h"
 #include "usart.h"
 #include "i2c.h"
+//private defines
 
+/*	-- printf definition --*/
 
-/* -- private defines --   */
+int16_t Gyro_X_RAW;
+int16_t Gyro_Y_RAW;
+int16_t Gyro_Z_RAW;
+
+uint8_t Gyro_FS_Select;
+uint8_t Gyro_FS_Mult_Factor;
+
+float yaw_actual, yaw_filtered;
+volatile float yaw_array[5];// = {0,0,0,0,0};
+
+float Gz;
+float GyroErrorZ;
+
+long elapsedTime, currentTime, previousTime;
+float Z_error;
+
+float Gz_variance;
+float Gz_stdev;
 
 #define MPU6050_ADDR 0xD0
 #define SMPLRT_DIV_REG 0x19
@@ -25,7 +47,6 @@
 #define ACCEL_XOUT_H_REG 0x3B
 #define TEMP_OUT_H_REG 0x41
 #define GYRO_XOUT_H_REG 0x43
-#define GYRO_ZOUT_H_REG 0x47
 #define PWR_MGMT_1_REG 0x6B
 #define WHO_AM_I_REG 0x75
 
@@ -35,25 +56,16 @@ typedef enum
 	MPU_ERROR    = 0x01U
 } MPU6050_StatusTypeDef;
 
-
-
-
 /* -- private variables --   */
 
 
-typedef struct MPU_Data{
-	float mean;
-	float variance;
-	float stdev;
-	int FS_Mult_Factor;
-}MPU_Data;
+/* -- FUNCTIONS  -- */
 
+MPU6050_StatusTypeDef MPU6050_Init(uint8_t gyro_fs);
+void MPU6050_Read_Gyro (void);
+void MPU6050_Calculate_IMU_Error(int);
+//void filter(float *, float *, volatile float *);
 
-/* -- functions declarations  -- */
-
-MPU6050_StatusTypeDef MPU6050_Init(MPU_Data * mpu_data,uint8_t gyro_fs);
-float MPU6050_Read_Gyro (MPU_Data * mpu_data);
-void MPU6050_Calculate_IMU_Error(MPU_Data * mpu_data, int seconds);
 
 
 #endif /* INC_MPU6050_H_ */

@@ -58,18 +58,12 @@
  *
  *
  *
- */
-	//	int freq = HAL_RCC_GetPCLK1Freq() * 2;  // APB1 Timer Clock f = HAL_RCC_GetPCLK1Freq() * 2;
-	//	int ARR = 89999999;
-	//	float Tc = 0.02;  //tempo di campionamento desiderato [ms]
-	//
-	//
-	//	int Calculated_PSC = ((freq * Tc) / (1 + ARR)) - 1;
-	//	int Calculated_Tc = ((1+ARR)*(Calculated_PSC+1))/freq;
-
-
-	//	printf("Freq=%d Calculated PSC=%d, Calculated_Tc=%d\n",freq, Calculated_PSC, Calculated_Tc);
-
+ *
+ *
+ *
+ *
+ *
+ * */
 
 
 

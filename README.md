@@ -1,2 +1,2 @@
-# Embedded_Control-RTOS
-Progetto per l'esame Embedded Control
+# EC_Noctowl_RTOS
+Project for embedded control course, Noctowl team

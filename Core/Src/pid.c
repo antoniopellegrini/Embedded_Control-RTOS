@@ -7,15 +7,7 @@
 
 #include "pid.h"
 
-/**
-  * @brief   Calculates 	pid actuation variable
-  * @param   hpid  			Pid handler
-  * @param   current_time   Current time in ticks
-  * @param   current_angle  Current angle (input)
-  *	@param   desired_angle  Desired angle (output)
-  *	@params  kp,ki,kd 		Pid gains
-  *	@retrival calculated_pid, calculated_direction are saved in hpid
-  */
+
 int PID_Calculate(hpid * hpid, float current_time ,float current_angle, float desired_angle, float kp, float ki, float kd){
 
 	//hpid passed by REFERENCE
