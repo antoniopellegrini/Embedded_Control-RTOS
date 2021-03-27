@@ -556,9 +556,9 @@ void SensorReadFunc(void const * argument)
 
 
 				//ignore small angles:
-				//				if((fabs(yaw.angle.f[0]-yaw_new.angle.f[0])<(Gz_stdev))){
-				//					yaw_new.angle.f[0] = yaw.angle.f[0];
-				//				}
+				if((fabs(yaw.angle.f[0]-yaw_new.angle.f[0])<(Gz_stdev))){
+					yaw_new.angle.f[0] = yaw.angle.f[0];
+				}
 
 				//normalize the angle between -180° and 180°
 				if (yaw_new.angle.f[0] >= 180.0)
@@ -644,8 +644,8 @@ void DebugThreadFunc(void const * argument)
 	for(;;)
 	{
 		if(osSemaphoreWait(DebugThreadSemHandle, osWaitForever) == osOK){
-			printf("debug-thread: P1_angle=%f, P2_angle=%f\n",debug_f1,debug_f2);
-			//printf("DEBUG  --- P1_pid=%f P1_direction=%d   ---  P2_pid=%f P2_direction=%d\n", debug_PID_P1,debug_direction_P1, debug_PID_P2, debug_direction_P2);
+			//printf("debug-thread: P1_angle=%f, P2_angle=%f\n",debug_f1,debug_f2);
+			printf("DEBUG  --- P1_pid=%f P1_direction=%d   ---  P2_pid=%f P2_direction=%d\n", debug_PID_P1,debug_direction_P1, debug_PID_P2, debug_direction_P2);
 		}
 		osDelay(1);
 	}
