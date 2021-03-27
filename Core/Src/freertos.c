@@ -687,7 +687,7 @@ void InitTaskFunc(void const * argument)
 		printf("Gz: %f Gz_error: %f \n", Gz, GyroErrorZ);
 
 		printf("[OS] Init DONE\n");
-		//osDelay(1000);
+		//osDelay(1000); //tvbanto<3
 
 
 
