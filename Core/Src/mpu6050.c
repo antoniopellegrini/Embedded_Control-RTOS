@@ -134,10 +134,10 @@ void MPU6050_Calculate_IMU_Error(MPU_Data * mpu_data, int seconds){
 	float variance = 0;		//varianza
 	float std_dev = 0;		//deviazione standard
 
-	mean = MPU6050_Read_Gyro();
+	mean = MPU6050_Read_Gyro(mpu_data);
 
 	for(int i = 0; i < numOfIter; i++){
-		reading = MPU6050_Read_Gyro();
+		reading = MPU6050_Read_Gyro(mpu_data);
 		delta = reading - mean;
 		mean = mean + delta / (i+1);
 		msq = msq + delta  * (reading - mean);
