@@ -136,7 +136,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 	if( htim->Instance == TIM2){
 
-		//printf("Timer\n");
+		//printf("Timer\r\n");
 		//TOGGLA il pin OutputInterrupt
 		HAL_GPIO_TogglePin(OutputTimer_GPIO_Port, OutputTimer_Pin);
 
@@ -359,7 +359,7 @@ void P1EntryFunc(void const * argument)
 
 				if (first_loop){
 					first_angle = data.angle.f[0];
-					printf("[!] First angle: %f\n", first_angle );
+					printf("[!] First angle: %f\r\n", first_angle );
 					first_loop = 0;
 				}
 
@@ -390,7 +390,7 @@ void P1EntryFunc(void const * argument)
 					HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, pid_DAC);
 
 				} else {
-					printf("P1 - CRC Error\n");
+					printf("P1 - CRC Error\r\n");
 
 					/* TODO: Che succede se il CRC è errato?
 					 *
@@ -460,7 +460,7 @@ void P2EntryFunc(void const * argument)
 				//start from 0
 				if (first_loop){
 					first_angle = data.angle.f[0];
-					printf("[!] First angle: %f\n", first_angle );
+					printf("[!] First angle: %f\r\n", first_angle );
 					first_loop = 0;
 				}
 
@@ -493,7 +493,7 @@ void P2EntryFunc(void const * argument)
 					HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, pid_DAC);
 
 				}else{
-					printf("P2 - CRC Error\n");
+					printf("P2 - CRC Error\r\n");
 				}
 			}
 
@@ -620,7 +620,7 @@ void ITSyncFunc(void const * argument)
 //		if (status1 == osOK && status2== osOK){
 //			osThreadSuspend(InterruptSyncHandle);
 //		}else{
-//			printf("OS Error - ITSyncFunc!\n");
+//			printf("OS Error - ITSyncFunc!\r\n");
 //			osThreadSuspend(InterruptSyncHandle);
 //		}
 
@@ -644,8 +644,8 @@ void DebugThreadFunc(void const * argument)
 	for(;;)
 	{
 		if(osSemaphoreWait(DebugThreadSemHandle, osWaitForever) == osOK){
-			//printf("debug-thread: P1_angle=%f, P2_angle=%f\n",debug_f1,debug_f2);
-			printf("DEBUG  --- P1_pid=%f P1_direction=%d   ---  P2_pid=%f P2_direction=%d\n", debug_PID_P1,debug_direction_P1, debug_PID_P2, debug_direction_P2);
+			//printf("debug-thread: P1_angle=%f, P2_angle=%f\r\n",debug_f1,debug_f2);
+			printf("DEBUG  --- P1_pid=%f P1_direction=%d   ---  P2_pid=%f P2_direction=%d\r\n", debug_PID_P1,debug_direction_P1, debug_PID_P2, debug_direction_P2);
 		}
 		osDelay(1);
 	}
@@ -662,7 +662,7 @@ void DebugThreadFunc(void const * argument)
 void InitTaskFunc(void const * argument)
 {
 	/* USER CODE BEGIN InitTaskFunc */
-	printf("[OS] - Start configuration thread\n");
+	printf("[OS] - Start configuration thread\r\n");
 
 	//	int freq = HAL_RCC_GetPCLK1Freq() * 2;  // APB1 Timer Clock f = HAL_RCC_GetPCLK1Freq() * 2;
 	//	int ARR = 89999999;
@@ -673,21 +673,21 @@ void InitTaskFunc(void const * argument)
 	//	int Calculated_Tc = ((1+ARR)*(Calculated_PSC+1))/freq;
 
 
-	//	printf("Freq=%d Calculated PSC=%d, Calculated_Tc=%d\n",freq, Calculated_PSC, Calculated_Tc);
+	//	printf("Freq=%d Calculated PSC=%d, Calculated_Tc=%d\r\n",freq, Calculated_PSC, Calculated_Tc);
 
 	osDelay(2000);
-	printf("[OS] - Init MPU\n\n");
+	printf("[OS] - Init MPU\n\r\n");
 
 	if(MPU6050_Init(3) == MPU_OK){
 
-		printf("	[MPU6050] Init Success!\n");
+		printf("	[MPU6050] Init Success!\r\n");
 		//calibrazione
 		MPU6050_Calculate_IMU_Error(2);
 
-		printf("Gz: %f Gz_error: %f \n", Gz, GyroErrorZ);
+		printf("Gz: %f Gz_error: %f\r\n", Gz, GyroErrorZ);
 
-		printf("[OS] Init DONE\n");
-		//osDelay(1000); //tvbanto<3<3
+		printf("[OS] Init DONE\r\n");
+		//osDelay(1000);
 
 
 
@@ -701,21 +701,21 @@ void InitTaskFunc(void const * argument)
 			osThreadResume(ThreadP2Handle);
 
 			if (HAL_TIM_Base_Start_IT(&htim2) == HAL_OK){ // custom: init timer for timer interrupt
-				printf(" Stating timer...\n\n");
+				printf(" Stating timer...\r\n\n");
 
 				HAL_GPIO_WritePin(Alive_GPIO_Port, Alive_Pin, 1);
 				HAL_GPIO_WritePin(Alive_backup_GPIO_Port, Alive_backup_Pin, 1);
 				//HAL_TIM_Base_Start_IT(&htim6);
 				//osDelay(1000);
 			}else{
-				printf("[OS] Timer failed to start - suspending all threads.\n");
+				printf("[OS] Timer failed to start - suspending all threads.\r\n");
 				osThreadSuspendAll();
 			}
 		}else{
-			printf("[OS] MPU is Slave, waiting for external interrupt...\n\n");
+			printf("[OS] MPU is Slave, waiting for external interrupt...\r\n\n");
 		}
 	}else{
-		printf("	[MPU6050] Init Fail\n");
+		printf("	[MPU6050] Init Fail\r\n");
 	}
 	HAL_GPIO_WritePin(Alive_GPIO_Port, Alive_Pin, 1);
 	//Gyro_Z_RAW = 0;
