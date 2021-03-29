@@ -72,7 +72,7 @@ uint8_t is_Master = 1;   // 0 --> slave; 1--> master
 
 //pid
 float kp = 5;
-float ki = 0;
+float ki = 5;
 float kd = 0;
 
 
@@ -475,6 +475,7 @@ void P2EntryFunc(void const * argument)
 					//pid
 
 					PID_Calculate(&PidHandler, xTaskGetTickCount(), current_angle, desired_angle, kp, ki, kd);
+
 
 
 					//output direction on gpio:     0--> left     1 --> rigth

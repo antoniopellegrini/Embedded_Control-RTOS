@@ -15,7 +15,7 @@
 
 
 typedef struct hpid{
-	float I_prev, prev_e, e;
+	float I_prev, I_old, prev_e, e;
 	float pid_elapsedTime, pid_currentTime, pid_previousTime;
 	float P,I,D;
 	float calculated_pid;
