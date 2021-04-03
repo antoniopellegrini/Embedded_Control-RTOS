@@ -65,7 +65,7 @@ uint32_t samples_per_seconds = 1;
 uint32_t multiplier = 1;
 uint32_t sample_time;
 
-uint8_t debug_active = 1;
+uint8_t debug_active = 0;
 uint8_t is_Master = 1;   // 0 --> slave; 1--> master
 //if timer interrupt is enabled leave this in slave mode
 
@@ -100,6 +100,9 @@ typedef struct angle_data{
 } angle_data;
 
 angle_data no_data;
+
+
+
 
 
 
@@ -144,7 +147,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 		//printf("Timer\r\n");
 		//TOGGLA il pin OutputInterrupt
-		HAL_GPIO_TogglePin(OutputTimer_GPIO_Port, OutputTimer_Pin);
+
 
 
 		//osThreadResume(InterruptSyncHandle);
@@ -336,6 +339,18 @@ void P1EntryFunc(void const * argument)
 {
 	/* USER CODE BEGIN P1EntryFunc */
 
+	float current_time;
+	float elapsed_time;
+	float old_time;
+	float mission_time = -5.0;
+	float starting_time;
+
+
+
+
+	uint8_t mission_started = 0;
+
+
 	angle_data data;
 	uint32_t crc;
 
@@ -345,6 +360,7 @@ void P1EntryFunc(void const * argument)
 
 
 	hpid PidHandler;
+
 
 
 	int pid_DAC = 0;
@@ -367,6 +383,7 @@ void P1EntryFunc(void const * argument)
 					first_angle = data.angle.f[0];
 					printf("[!] First angle: %f\r\n", first_angle );
 					first_loop = 0;
+					starting_time = xTaskGetTickCount();
 				}
 
 				current_angle = data.angle.f[0] - first_angle ;
@@ -375,6 +392,30 @@ void P1EntryFunc(void const * argument)
 				crc = HAL_CRC_Calculate(&hcrc, data.angle.i,1);
 
 				if (crc == data.crc){
+
+					current_time = xTaskGetTickCount() - starting_time;
+					elapsed_time = (current_time - old_time)/1000;
+					old_time = current_time;
+
+					mission_time = mission_time + elapsed_time;
+
+					if( mission_time >= 0 && mission_time <= 30){
+						mission_started = 1;
+						HAL_GPIO_WritePin(Alive_GPIO_Port, Alive_Pin, 0);
+					}else{
+						mission_started = 0;
+						HAL_GPIO_WritePin(Alive_GPIO_Port, Alive_Pin, 1);
+					}
+
+					if (mission_started){
+						desired_angle = 6 * mission_time;
+					}
+
+
+					printf("mission_time = %f  angolo = %f\n",mission_time, desired_angle);
+
+
+
 
 					//calculates pid
 
@@ -437,11 +478,26 @@ void P2EntryFunc(void const * argument)
 	 * quindi al posto di osWaitForever potrebbe esserci un timeout al cui scadere chiamiamo
 	 * la funzione di negoziazione */
 
+	float current_time;
+	float elapsed_time;
+	float old_time;
+	float mission_time = -5.0;
+
+
+
+
+	float starting_time;
+	float mission_started;
+
+
+	int mission_time_int = (int) mission_time;
+	int mission_time_int_old;
+
 	angle_data data;
 	uint32_t crc;
 
 	float desired_angle = 0.0;
-	float current_angle=0.0;
+	float current_angle = 0.0;
 
 	hpid PidHandler;
 
@@ -468,6 +524,8 @@ void P2EntryFunc(void const * argument)
 					first_angle = data.angle.f[0];
 					printf("[!] First angle: %f\r\n", first_angle );
 					first_loop = 0;
+					starting_time = xTaskGetTickCount();
+
 				}
 
 				current_angle = data.angle.f[0] - first_angle;
@@ -477,6 +535,39 @@ void P2EntryFunc(void const * argument)
 				crc = HAL_CRC_Calculate(&hcrc, data.angle.i,1);
 
 				if (crc == data.crc){
+
+
+					mission_time_int = (int) mission_time;
+
+					current_time = xTaskGetTickCount() - starting_time;
+					elapsed_time = (current_time - old_time)/1000;
+					old_time = current_time;
+
+					mission_time = mission_time + elapsed_time;
+
+					if( mission_time >= 0 && mission_time <= 30){
+						mission_started = 1;
+						HAL_GPIO_WritePin(Alive_GPIO_Port, Alive_Pin, 0);
+					}else{
+						mission_started = 0;
+						HAL_GPIO_WritePin(Alive_GPIO_Port, Alive_Pin, 1);
+						HAL_GPIO_TogglePin(OutputTimer_GPIO_Port, 0);
+					}
+
+					if (mission_started){
+
+						desired_angle = 6 * mission_time;
+					}
+
+					if(mission_time_int >= mission_time_int_old && !mission_started){
+						HAL_GPIO_TogglePin(OutputTimer_GPIO_Port, OutputTimer_Pin);
+					}
+
+					mission_time_int_old = mission_time_int;
+
+
+
+
 
 					//pid
 
@@ -568,12 +659,11 @@ void SensorReadFunc(void const * argument)
 				}
 
 				//normalize the angle between -180° and 180°
-/*
-				if (yaw_new.angle.f[0] >= 180.0)
-					yaw_new.angle.f[0] -= 360;
-				if (yaw_new.angle.f[0] <= -180.0)
-					yaw_new.angle.f[0] += 360;
-*/
+
+				//				if (yaw_new.angle.f[0] >= 180.0)
+				//					yaw_new.angle.f[0] -= 360;
+				//				if (yaw_new.angle.f[0] <= -180.0)
+				//					yaw_new.angle.f[0] += 360;
 
 
 				yaw_new.crc = HAL_CRC_Calculate(&hcrc, yaw_new.angle.i,1);
@@ -616,21 +706,21 @@ void ITSyncFunc(void const * argument)
 	for(;;)
 	{
 
-//		osStatus status1;
-//		osStatus status2;
-//
-//		//starts the two processes
-//		status1 = osSemaphoreRelease(P1ITSemHandle);
-//		status2 = osSemaphoreRelease(P2ITSemHandle);
-//
-//
-//		//just a check, not essential
-//		if (status1 == osOK && status2== osOK){
-//			osThreadSuspend(InterruptSyncHandle);
-//		}else{
-//			printf("OS Error - ITSyncFunc!\r\n");
-//			osThreadSuspend(InterruptSyncHandle);
-//		}
+		//		osStatus status1;
+		//		osStatus status2;
+		//
+		//		//starts the two processes
+		//		status1 = osSemaphoreRelease(P1ITSemHandle);
+		//		status2 = osSemaphoreRelease(P2ITSemHandle);
+		//
+		//
+		//		//just a check, not essential
+		//		if (status1 == osOK && status2== osOK){
+		//			osThreadSuspend(InterruptSyncHandle);
+		//		}else{
+		//			printf("OS Error - ITSyncFunc!\r\n");
+		//			osThreadSuspend(InterruptSyncHandle);
+		//		}
 
 		osDelay(1);
 
@@ -683,7 +773,7 @@ void InitTaskFunc(void const * argument)
 
 	//	printf("Freq=%d Calculated PSC=%d, Calculated_Tc=%d\r\n",freq, Calculated_PSC, Calculated_Tc);
 
-	osDelay(2000);
+	osDelay(4000);
 	printf("[OS] - Init MPU\n\r\n");
 
 	if(MPU6050_Init(3) == MPU_OK){
@@ -711,8 +801,8 @@ void InitTaskFunc(void const * argument)
 			if (HAL_TIM_Base_Start_IT(&htim2) == HAL_OK){ // custom: init timer for timer interrupt
 				printf(" Stating timer...\r\n\n");
 
-				HAL_GPIO_WritePin(Alive_GPIO_Port, Alive_Pin, 1);
-				HAL_GPIO_WritePin(Alive_backup_GPIO_Port, Alive_backup_Pin, 1);
+
+
 				//HAL_TIM_Base_Start_IT(&htim6);
 				//osDelay(1000);
 			}else{
@@ -725,7 +815,7 @@ void InitTaskFunc(void const * argument)
 	}else{
 		printf("	[MPU6050] Init Fail\r\n");
 	}
-	HAL_GPIO_WritePin(Alive_GPIO_Port, Alive_Pin, 1);
+
 	//Gyro_Z_RAW = 0;
 	//					HAL_GPIO_WritePin(Alive_backup_GPIO_Port, Alive_backup_Pin, 1);
 	//kill this thread
