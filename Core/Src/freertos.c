@@ -71,9 +71,15 @@ uint8_t is_Master = 1;   // 0 --> slave; 1--> master
 
 
 //pid
-float kp = 5;
-float ki = 5;
-float kd = 0;
+// float kp = 22,5 //ORIGINALE
+
+float kp = 30.0;
+float ki = 10.0;
+float kd = 22.5;
+
+//float kp = 22.5;
+//float ki = 8.18;
+//float kd = 15.46;
 
 
 float debug_f1;
@@ -562,11 +568,12 @@ void SensorReadFunc(void const * argument)
 				}
 
 				//normalize the angle between -180° and 180°
+/*
 				if (yaw_new.angle.f[0] >= 180.0)
 					yaw_new.angle.f[0] -= 360;
 				if (yaw_new.angle.f[0] <= -180.0)
 					yaw_new.angle.f[0] += 360;
-
+*/
 
 
 				yaw_new.crc = HAL_CRC_Calculate(&hcrc, yaw_new.angle.i,1);

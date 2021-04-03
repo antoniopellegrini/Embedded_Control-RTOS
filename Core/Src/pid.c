@@ -28,6 +28,8 @@ int PID_Calculate(hpid * hpid, float current_time ,float current_angle, float de
 
 	if ( fabs(hpid->calculated_pid) >= 4000.0  ){ // anti windup
 		hpid->I_prev = hpid->I_old;
+		}else{
+			hpid->I_prev = 0;
 		}
 
 
@@ -35,7 +37,7 @@ int PID_Calculate(hpid * hpid, float current_time ,float current_angle, float de
 
 	//calculate pid and direction (rigth - left)
 
-	hpid->calculated_pid = hpid->P + hpid->I_prev - hpid->D;
+	hpid->calculated_pid = hpid->P + hpid->I_prev + hpid->D;
 
 	if ( fabs(hpid->calculated_pid) > 4000.0  ){
 		hpid->calculated_pid = (hpid->calculated_pid>=0) ? 4000 : - 4000 ;
