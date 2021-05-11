@@ -111,7 +111,6 @@ osThreadId defaultTaskHandle;
 osThreadId ThreadP1Handle;
 osThreadId ThreadP2Handle;
 osThreadId SensorReadHandle;
-osThreadId InterruptSyncHandle;
 osThreadId DebugThreadHandle;
 osThreadId InitTaskHandle;
 osMessageQId Sensor1QueueHandle;
@@ -161,6 +160,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if (htim->Instance == TIM6) {
 
 	}
+	if (htim->Instance == TIM7){
+
+		//TODO implements 1 second timer
+
+	}
 }
 
 
@@ -180,7 +184,6 @@ void StartDefaultTask(void const * argument);
 void P1EntryFunc(void const * argument);
 void P2EntryFunc(void const * argument);
 void SensorReadFunc(void const * argument);
-void ITSyncFunc(void const * argument);
 void DebugThreadFunc(void const * argument);
 void InitTaskFunc(void const * argument);
 
@@ -277,10 +280,6 @@ void MX_FREERTOS_Init(void) {
 	osThreadDef(SensorRead, SensorReadFunc, osPriorityNormal, 0, 256);
 	SensorReadHandle = osThreadCreate(osThread(SensorRead), NULL);
 
-	/* definition and creation of InterruptSync */
-	osThreadDef(InterruptSync, ITSyncFunc, osPriorityAboveNormal, 0, 256);
-	InterruptSyncHandle = osThreadCreate(osThread(InterruptSync), NULL);
-
 	/* definition and creation of DebugThread */
 	osThreadDef(DebugThread, DebugThreadFunc, osPriorityIdle, 0, 256);
 	DebugThreadHandle = osThreadCreate(osThread(DebugThread), NULL);
@@ -344,9 +343,6 @@ void P1EntryFunc(void const * argument)
 	float old_time;
 	float mission_time = -5.0;
 	float starting_time;
-
-
-
 
 	uint8_t mission_started = 0;
 
@@ -687,47 +683,6 @@ void SensorReadFunc(void const * argument)
 	/* USER CODE END SensorReadFunc */
 }
 
-/* USER CODE BEGIN Header_ITSyncFunc */
-/**
- * @brief Function implementing the InterruptSync thread.
- * @param argument: Not used
- * @retval None
- */
-/* USER CODE END Header_ITSyncFunc */
-void ITSyncFunc(void const * argument)
-{
-	/* USER CODE BEGIN ITSyncFunc */
-
-	/*
-	 * ATTUALMENTE questo thread NON E' UTILIZZATO
-	 *
-	 * */
-	/* Infinite loop */
-	for(;;)
-	{
-
-		//		osStatus status1;
-		//		osStatus status2;
-		//
-		//		//starts the two processes
-		//		status1 = osSemaphoreRelease(P1ITSemHandle);
-		//		status2 = osSemaphoreRelease(P2ITSemHandle);
-		//
-		//
-		//		//just a check, not essential
-		//		if (status1 == osOK && status2== osOK){
-		//			osThreadSuspend(InterruptSyncHandle);
-		//		}else{
-		//			printf("OS Error - ITSyncFunc!\r\n");
-		//			osThreadSuspend(InterruptSyncHandle);
-		//		}
-
-		osDelay(1);
-
-	}
-	/* USER CODE END ITSyncFunc */
-}
-
 /* USER CODE BEGIN Header_DebugThreadFunc */
 /**
  * @brief Function implementing the DebugThread thread.
@@ -773,55 +728,146 @@ void InitTaskFunc(void const * argument)
 
 	//	printf("Freq=%d Calculated PSC=%d, Calculated_Tc=%d\r\n",freq, Calculated_PSC, Calculated_Tc);
 
-	osDelay(4000);
-	printf("[OS] - Init MPU\n\r\n");
+	/*	states:
+	 * 		abort 				-1
+	 * 		on gound		    0
+	 * 		ready for fligth    1
+	 * 		powered ascend		2
+	 * 		coasting			3
+	 *
+	 * */
 
-	if(MPU6050_Init(3) == MPU_OK){
+	int state = 0;
+	int initialized = 0;
 
-		printf("	[MPU6050] Init Success!\r\n");
-		//calibrazione
-		MPU6050_Calculate_IMU_Error(2);
+	int in_powered_ascent = 0;
+	int timer = -5;
 
-		printf("Gz: %f Gz_error: %f\r\n", Gz, GyroErrorZ);
+	for(;;){
 
-		printf("[OS] Init DONE\r\n");
-		//osDelay(1000);
+		switch(state){
 
+		case 0:
 
+			printf("[state = ON-GROUND]");
 
-		if(is_Master){
+			if (!initialized){
 
+				if(MPU6050_Init(3) == MPU_OK){
+					initialized = 1;
+					printf("	[MPU6050] Init Success!\r\n");
+					osDelay(2000);
+				} else {
 
-			printf("[OS] MPU is Master - ");
-			osThreadResume(SensorReadHandle);
-			osThreadResume(DebugThreadHandle);
-			osThreadResume(ThreadP1Handle);
-			osThreadResume(ThreadP2Handle);
+					printf("	[MPU6050] init Failed!\r\n");
+				}
 
-			if (HAL_TIM_Base_Start_IT(&htim2) == HAL_OK){ // custom: init timer for timer interrupt
-				printf(" Stating timer...\r\n\n");
+			} else {   //initialized
 
+				//calibrazione
+				if ( codice_i2c == "calibrate"){
+					MPU6050_Calculate_IMU_Error(2);
+					printf("Gz: %f Gz_error: %f\r\n", Gz, GyroErrorZ);
+					printf("[OS] Init done\r\n");
+				}
 
+				//avvio timer
+				if (codice_i2c == "start_countdown"){
 
-				//HAL_TIM_Base_Start_IT(&htim6);
-				//osDelay(1000);
-			}else{
-				printf("[OS] Timer failed to start - suspending all threads.\r\n");
-				osThreadSuspendAll();
+					//start 1 second timer
+
+					state = 1;
+				}
+
+				//abort
+				if (codice_i2c == "abort"){
+					state = -1;
+				}
 			}
-		}else{
-			printf("[OS] MPU is Slave, waiting for external interrupt...\r\n\n");
+
+		case 1:
+			printf("[state = READY-FOR-FLIGTH]");
+
+			// TODO start mission timer
+
+			state = 2;
+			break;
+
+
+		case 2:
+			printf("[state = POWERED-ASCEND]");
+
+			//get mission timer semaphore
+
+
+			if (timer == 0 && !in_powered_ascent){
+
+				if(is_Master){
+
+
+					printf("[OS] MPU is Master - ");
+					osThreadResume(SensorReadHandle);
+					osThreadResume(DebugThreadHandle);
+					osThreadResume(ThreadP1Handle);
+					osThreadResume(ThreadP2Handle);
+
+
+
+					if (HAL_TIM_Base_Start_IT(&htim2) == HAL_OK){ // custom: init timer for timer interrupt
+						printf(" Stating sampling timer...\r\n\n");
+						in_powered_ascent = 1;
+
+					} else {
+						printf("[OS] Timer failed to start - aborting.\r\n");
+						state = -1;
+					}
+
+
+
+				}else{
+					in_powered_ascent = 1;
+					printf("[OS] MPU is Slave, waiting for external interrupt...\r\n\n");
+				}
+
+			}
+			if (timer == 30){
+
+
+				if (is_master)
+					HAL_TIM_Base_Stop_IT(&htim2);
+
+				osThreadSuspend(SensorReadHandle);
+				osThreadSuspend(DebugThreadHandle);
+				osThreadSuspend(ThreadP1Handle);
+				osThreadSuspend(ThreadP2Handle);
+
+				state = 3;
+			}
+
+
+			break;
+		case 3:
+			printf("[state = COASTING]");
+
+			// TODO make trajectory adjustment
+
+			break;
 		}
-	}else{
-		printf("	[MPU6050] Init Fail\r\n");
+
+		case -1:
+			printf("[state = ABORT]");
+			osThreadSuspendAll();
+			break;
 	}
 
-	//Gyro_Z_RAW = 0;
-	//					HAL_GPIO_WritePin(Alive_backup_GPIO_Port, Alive_backup_Pin, 1);
-	//kill this thread
-	osThreadTerminate(InitTaskHandle);
 
-	/* USER CODE END InitTaskFunc */
+
+//Gyro_Z_RAW = 0;
+//					HAL_GPIO_WritePin(Alive_backup_GPIO_Port, Alive_backup_Pin, 1);
+//kill this thread
+osThreadTerminate(InitTaskHandle);
+
+/* USER CODE END InitTaskFunc */
 }
 
 /* Private application code --------------------------------------------------*/
