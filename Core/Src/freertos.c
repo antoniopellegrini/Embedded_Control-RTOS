@@ -671,6 +671,8 @@ void InitTaskFunc(void const * argument)
 	int in_powered_ascent = 0;
 	uint8_t cmd1[32] = "STATE 1 WFC";
 
+	uint8_t msg[32]="TELEMETRY";   //TODO temporaneo, da capire quale telemetria inviare
+
 
 	uint8_t receiveBuf[1];
 
@@ -827,10 +829,10 @@ void InitTaskFunc(void const * argument)
 			}
 
 
-			//TX telemetry
-			uint8_t msg[32];
+			//TX telemetry    TODO: invia la telemetria e non un messaggio fisso xD
+
 			HAL_I2C_Slave_Transmit(&hi2c3, msg, (uint16_t) 32, HAL_MAX_DELAY);
-				printf("transmitted!\n");
+			printf("transmitted!\n");
 
 
 		case 4:
