@@ -179,17 +179,14 @@ angle_data queue_receive(osMessageQId queue_id){
 	}
 }
 
-void get_I2C_confermation(char * str, uint8_t * pData, uint8_t * receiveBuf){		// uint8_t * pData == uint8_y pData[]  <<-- stessa cosa
+void get_I2C_confermation( uint8_t * pData, uint8_t * receiveBuf){		// uint8_t * pData == uint8_y pData[]  <<-- stessa cosa
 
-	printf("waiting to transmit: ");
-	printf(str);
-	pData = "STATE 1 - STARTED COUNTDOWN";
 
 	HAL_I2C_Slave_Transmit(&hi2c3, pData, (uint16_t) 32, HAL_MAX_DELAY);
 	printf("transmitted!\n");
 
 
-	printf("wait to receive OK");
+	printf("wait to receive ");
 	HAL_I2C_Slave_Receive(&hi2c3, receiveBuf, (uint16_t) 1, HAL_MAX_DELAY);
 	printf("received: %s\n", receiveBuf);
 }
@@ -671,12 +668,10 @@ void InitTaskFunc(void const * argument)
 
 	int state = 0;
 	int timer = -5;
-
-	int initialized = 0;
 	int in_powered_ascent = 0;
+	uint8_t cmd1[32] = "STATE 1 WFC";
 
 
-	uint8_t pData[32];
 	uint8_t receiveBuf[1];
 
 	for(;;){
@@ -689,8 +684,6 @@ void InitTaskFunc(void const * argument)
 
 			//transmit state 0
 
-			get_I2C_confermation("[state 0] Initialization\n", &pData, &receiveBuf);
-
 
 			//first loop initialization
 
@@ -702,9 +695,8 @@ void InitTaskFunc(void const * argument)
 
 					//transmit mpu init success
 
-					get_I2C_confermation("[MPU6050] Init Success!", &pData, &receiveBuf);
-
 					state = 1;
+					break;
 
 
 					//TODO inizializza l'angolo del servo a 0 (invia ai processi quest'informazione)
@@ -714,6 +706,7 @@ void InitTaskFunc(void const * argument)
 
 					printf("[MPU6050] init Failed!\r\n");
 					state = -1;
+					break;
 				}
 
 
@@ -724,25 +717,23 @@ void InitTaskFunc(void const * argument)
 
 		case 1:
 
-			get_I2C_confermation("[STATE 1] Waiting for commands", &pData, &receiveBuf);
+
+			get_I2C_confermation( cmd1, receiveBuf);
 
 
 
-			//	pData = 1 --> ri-calibrazione
-
-			if ( pData[0] == 1){
+			if ( receiveBuf[0] == 1){
 				printf("[OS] Re-calibration");
 
 				MPU6050_Calculate_IMU_Error(2);
 				printf("Gz: %f Gz_error: %f\r\n", Gz, GyroErrorZ);
 				printf("[OS] Calibration done\r\n");
 
-
 			}
 
-			//	pData = 2 --> avvio timer
 
-			if ( pData[0] == 2){
+
+			if ( receiveBuf[0] == 2){
 				printf("[OS] Starting countdown");
 
 				state = 2;
@@ -750,9 +741,9 @@ void InitTaskFunc(void const * argument)
 
 			}
 
-			//	pData = -1 --> abort
 
-			if (pData[0] == -1){
+
+			if (receiveBuf[0] == -1){
 				printf("[OS] ABORT");
 
 				state = -1;
@@ -767,15 +758,12 @@ void InitTaskFunc(void const * argument)
 
 		case 2:
 
-			get_I2C_confermation("[state 2] STARTED COUNTDONW\n", &pData, &receiveBuf);
-
 
 			//start MISSION timer
 
-			HAL_TIM_Base_Start_IT(&htim7) == HAL_OK;
+			HAL_TIM_Base_Start_IT(&htim7);
 
 			state = 3;
-
 			break;
 
 
@@ -839,6 +827,10 @@ void InitTaskFunc(void const * argument)
 			}
 
 
+			//TX telemetry
+			uint8_t msg[32];
+			HAL_I2C_Slave_Transmit(&hi2c3, msg, (uint16_t) 32, HAL_MAX_DELAY);
+				printf("transmitted!\n");
 
 
 		case 4:
@@ -890,6 +882,5 @@ void InitTaskFunc(void const * argument)
  * 		powered ascend		2
  * 		coasting			3
  *
-
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+*/
+ /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
