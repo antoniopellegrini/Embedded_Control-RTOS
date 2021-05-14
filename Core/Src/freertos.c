@@ -189,8 +189,24 @@ void get_I2C_confermation( uint8_t * pData, uint8_t * receiveBuf){		// uint8_t *
 	printf("wait to receive ");
 	HAL_I2C_Slave_Receive(&hi2c3, receiveBuf, (uint16_t) 1, HAL_MAX_DELAY);
 	printf("received: %s\n", receiveBuf);
+
+//	HAL_I2C_Slave_Receive_IT(&hi2c3, pData, (uint16_t) 32);
+
+
+
 }
 
+
+void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c){
+
+	if (hi2c->Instance == I2C3){
+
+		//TODO: INVIA NOTIFICA AL CASE 3
+
+	}
+
+
+}
 
 
 
@@ -671,7 +687,7 @@ void InitTaskFunc(void const * argument)
 	int in_powered_ascent = 0;
 	uint8_t cmd1[32] = "STATE 1 WFC";
 
-	uint8_t msg[32]="TELEMETRY";   //TODO temporaneo, da capire quale telemetria inviare
+	//uint8_t msg[32]="TELEMETRY";   //TODO temporaneo, da capire quale telemetria inviare
 
 
 	uint8_t receiveBuf[1];
@@ -724,6 +740,8 @@ void InitTaskFunc(void const * argument)
 
 
 
+
+
 			if ( receiveBuf[0] == 1){
 				printf("[OS] Re-calibration");
 
@@ -761,7 +779,10 @@ void InitTaskFunc(void const * argument)
 		case 2:
 
 
+
 			//start MISSION timer
+
+			//se arriva un messaggio i2c -1 devo abortire
 
 			HAL_TIM_Base_Start_IT(&htim7);
 
@@ -830,6 +851,15 @@ void InitTaskFunc(void const * argument)
 
 
 			//TX telemetry    TODO: invia la telemetria e non un messaggio fisso xD
+
+
+			uint8_t msg[32];   //TODO temporaneo, da capire quale telemetria inviare
+
+
+			//scrivi il timer nel buffer dei dati della telemetria
+
+			snprintf((char *) msg, sizeof(msg), "TELEMETRY - t=%d\n, ",timer);
+
 
 			HAL_I2C_Slave_Transmit(&hi2c3, msg, (uint16_t) 32, HAL_MAX_DELAY);
 			printf("transmitted!\n");
