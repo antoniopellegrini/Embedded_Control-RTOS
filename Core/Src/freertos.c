@@ -124,6 +124,7 @@ osMessageQId Sensor1QueueHandle;
 osMessageQId Sensor2QueueHandle;
 osMessageQId P1TelemetryQueueHandle;
 osMessageQId P2TelemetryQueueHandle;
+osMessageQId MissionTimerQueueHandle;
 osSemaphoreId P1ITSemHandle;
 osSemaphoreId P2ITSemHandle;
 osSemaphoreId DebugThreadSemHandle;
@@ -318,6 +319,10 @@ void MX_FREERTOS_Init(void) {
   /* definition and creation of P2TelemetryQueue */
   osMessageQDef(P2TelemetryQueue, 1, float);
   P2TelemetryQueueHandle = osMessageCreate(osMessageQ(P2TelemetryQueue), NULL);
+
+  /* definition and creation of MissionTimerQueue */
+  osMessageQDef(MissionTimerQueue, 1, int);
+  MissionTimerQueueHandle = osMessageCreate(osMessageQ(MissionTimerQueue), NULL);
 
   /* USER CODE BEGIN RTOS_QUEUES */
 	/* add queues, ... */
@@ -774,7 +779,7 @@ void InitTaskFunc(void const * argument)
 
 
 					//transmit mpu init success
-
+					printf("[MPU6050] init DONE!\n");
 					state = 1;
 					break;
 
@@ -914,8 +919,10 @@ void InitTaskFunc(void const * argument)
 				break;
 			}
 
-
 			printf("Mission timer: %d\n",timer);
+			osMessagePut(MissionTimerQueueHandle, (uint32_t) & timer, 1000);
+
+			osDelay(1);
 
 
 
@@ -962,29 +969,40 @@ void TelemetryThreadFunc(void const * argument)
 
 
 	telemetry_data telemetry_p1, telemetry_p2;
-	char msg[128];
+	char msg[64];
+	int mission_timer;
 
   /* Infinite loop */
   for(;;)
   {
 
+	  //get telemetry from P1 and P2
 
 	  telemetry_p1 = telemetry_queue_receive(P1TelemetryQueueHandle);
 	  telemetry_p2 = telemetry_queue_receive(P2TelemetryQueueHandle);
 
+	  //get mission timer
 
-	  //componi il messaggio della telemetria
+	  osEvent event = osMessageGet(MissionTimerQueueHandle, 10);
+	  	if (event.status == osEventMessage){
+	  		mission_timer = *((int *) event.value.v);
+	  	}else{
+	  		mission_timer = -5;
+	  	}
 
-	  snprintf(msg, sizeof(msg), "P1,%f,%f,%d;P2%f%f%d",
+	  // assemble telemetry message
+
+	  snprintf(msg, sizeof(msg), "P1:%f,%f,%d;P2:%f,%f,%d;T:%d",
 			  	  	  	  	  	  	  	  	  telemetry_p1.angle,
 											  telemetry_p1.pid,
 											  telemetry_p1.direction,
 											  telemetry_p2.angle,
 											  telemetry_p2.pid,
-											  telemetry_p2.direction
+											  telemetry_p2.direction,
+											  mission_timer
 	  	  	  	  	  	  	  	  	  	  	  );
 
-	  HAL_I2C_Slave_Transmit(&hi2c3, (uint8_t *)msg, (uint16_t) 128, HAL_MAX_DELAY);
+	  HAL_I2C_Slave_Transmit(&hi2c3, (uint8_t *)msg, (uint16_t) 64, HAL_MAX_DELAY);
 
 	  printf("telemetry transmitted!\n");
 
