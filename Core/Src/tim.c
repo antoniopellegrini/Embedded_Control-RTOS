@@ -28,7 +28,7 @@
 //int ARR = 899999;
 //float Tc = 0.02;  //tempo di campionamento desiderato [ms]
 //
-//float PSC = ((freq * Tc) / (1 + ARR)) - 1;
+//float PSC = ((freq * Tc(s)) / (1 + ARR)) - 1;
 //8999999 100 ms
 
 
@@ -95,7 +95,7 @@ void MX_TIM7_Init(void)
   TIM_MasterConfigTypeDef sMasterConfig = {0};
 
   htim7.Instance = TIM7;
-  htim7.Init.Prescaler = 179;
+  htim7.Init.Prescaler = 18000;
   htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim7.Init.Period = 49999;
   htim7.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
