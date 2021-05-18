@@ -66,6 +66,7 @@ uint32_t multiplier = 1;
 uint32_t sample_time;
 
 uint8_t debug_active = 1;
+uint8_t telemetry_enabled = 0;
 uint8_t is_Master = 1;   // 0 --> slave; 1--> master
 //if timer interrupt is enabled leave this in slave mode
 
@@ -210,7 +211,7 @@ void get_I2C_confermation( uint8_t * pData, uint8_t * receiveBuf){		// uint8_t *
 	HAL_I2C_Slave_Receive(&hi2c3, receiveBuf, (uint16_t) 1, HAL_MAX_DELAY);
 	printf("	received: %d\n", receiveBuf[0]);
 
-//	HAL_I2C_Slave_Receive_IT(&hi2c3, pData, (uint16_t) 32);
+	//	HAL_I2C_Slave_Receive_IT(&hi2c3, pData, (uint16_t) 32);
 
 
 
@@ -259,109 +260,109 @@ void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackTy
 /* USER CODE END GET_IDLE_TASK_MEMORY */
 
 /**
-  * @brief  FreeRTOS initialization
-  * @param  None
-  * @retval None
-  */
+ * @brief  FreeRTOS initialization
+ * @param  None
+ * @retval None
+ */
 void MX_FREERTOS_Init(void) {
-  /* USER CODE BEGIN Init */
+	/* USER CODE BEGIN Init */
 	sample_time = 1000/samples_per_seconds*multiplier;
 
 
-  /* USER CODE END Init */
+	/* USER CODE END Init */
 
-  /* USER CODE BEGIN RTOS_MUTEX */
+	/* USER CODE BEGIN RTOS_MUTEX */
 	/* add mutexes, ... */
-  /* USER CODE END RTOS_MUTEX */
+	/* USER CODE END RTOS_MUTEX */
 
-  /* Create the semaphores(s) */
-  /* definition and creation of P1ITSem */
-  osSemaphoreDef(P1ITSem);
-  P1ITSemHandle = osSemaphoreCreate(osSemaphore(P1ITSem), 1);
+	/* Create the semaphores(s) */
+	/* definition and creation of P1ITSem */
+	osSemaphoreDef(P1ITSem);
+	P1ITSemHandle = osSemaphoreCreate(osSemaphore(P1ITSem), 1);
 
-  /* definition and creation of P2ITSem */
-  osSemaphoreDef(P2ITSem);
-  P2ITSemHandle = osSemaphoreCreate(osSemaphore(P2ITSem), 1);
+	/* definition and creation of P2ITSem */
+	osSemaphoreDef(P2ITSem);
+	P2ITSemHandle = osSemaphoreCreate(osSemaphore(P2ITSem), 1);
 
-  /* definition and creation of DebugThreadSem */
-  osSemaphoreDef(DebugThreadSem);
-  DebugThreadSemHandle = osSemaphoreCreate(osSemaphore(DebugThreadSem), 1);
+	/* definition and creation of DebugThreadSem */
+	osSemaphoreDef(DebugThreadSem);
+	DebugThreadSemHandle = osSemaphoreCreate(osSemaphore(DebugThreadSem), 1);
 
-  /* definition and creation of MissionTimerSem */
-  osSemaphoreDef(MissionTimerSem);
-  MissionTimerSemHandle = osSemaphoreCreate(osSemaphore(MissionTimerSem), 1);
+	/* definition and creation of MissionTimerSem */
+	osSemaphoreDef(MissionTimerSem);
+	MissionTimerSemHandle = osSemaphoreCreate(osSemaphore(MissionTimerSem), 1);
 
-  /* definition and creation of CountingSemaphore */
-  osSemaphoreDef(CountingSemaphore);
-  CountingSemaphoreHandle = osSemaphoreCreate(osSemaphore(CountingSemaphore), 2);
+	/* definition and creation of CountingSemaphore */
+	osSemaphoreDef(CountingSemaphore);
+	CountingSemaphoreHandle = osSemaphoreCreate(osSemaphore(CountingSemaphore), 2);
 
-  /* USER CODE BEGIN RTOS_SEMAPHORES */
+	/* USER CODE BEGIN RTOS_SEMAPHORES */
 	/* add semaphores, ... */
-  /* USER CODE END RTOS_SEMAPHORES */
+	/* USER CODE END RTOS_SEMAPHORES */
 
-  /* USER CODE BEGIN RTOS_TIMERS */
+	/* USER CODE BEGIN RTOS_TIMERS */
 	/* start timers, add new ones, ... */
-  /* USER CODE END RTOS_TIMERS */
+	/* USER CODE END RTOS_TIMERS */
 
-  /* Create the queue(s) */
-  /* definition and creation of Sensor1Queue */
-  osMessageQDef(Sensor1Queue, 1, float);
-  Sensor1QueueHandle = osMessageCreate(osMessageQ(Sensor1Queue), NULL);
+	/* Create the queue(s) */
+	/* definition and creation of Sensor1Queue */
+	osMessageQDef(Sensor1Queue, 1, float);
+	Sensor1QueueHandle = osMessageCreate(osMessageQ(Sensor1Queue), NULL);
 
-  /* definition and creation of Sensor2Queue */
-  osMessageQDef(Sensor2Queue, 1, float);
-  Sensor2QueueHandle = osMessageCreate(osMessageQ(Sensor2Queue), NULL);
+	/* definition and creation of Sensor2Queue */
+	osMessageQDef(Sensor2Queue, 1, float);
+	Sensor2QueueHandle = osMessageCreate(osMessageQ(Sensor2Queue), NULL);
 
-  /* definition and creation of P1TelemetryQueue */
-  osMessageQDef(P1TelemetryQueue, 1, float);
-  P1TelemetryQueueHandle = osMessageCreate(osMessageQ(P1TelemetryQueue), NULL);
+	/* definition and creation of P1TelemetryQueue */
+	osMessageQDef(P1TelemetryQueue, 1, float);
+	P1TelemetryQueueHandle = osMessageCreate(osMessageQ(P1TelemetryQueue), NULL);
 
-  /* definition and creation of P2TelemetryQueue */
-  osMessageQDef(P2TelemetryQueue, 1, float);
-  P2TelemetryQueueHandle = osMessageCreate(osMessageQ(P2TelemetryQueue), NULL);
+	/* definition and creation of P2TelemetryQueue */
+	osMessageQDef(P2TelemetryQueue, 1, float);
+	P2TelemetryQueueHandle = osMessageCreate(osMessageQ(P2TelemetryQueue), NULL);
 
-  /* definition and creation of MissionTimerQueue */
-  osMessageQDef(MissionTimerQueue, 1, int);
-  MissionTimerQueueHandle = osMessageCreate(osMessageQ(MissionTimerQueue), NULL);
+	/* definition and creation of MissionTimerQueue */
+	osMessageQDef(MissionTimerQueue, 1, int);
+	MissionTimerQueueHandle = osMessageCreate(osMessageQ(MissionTimerQueue), NULL);
 
-  /* USER CODE BEGIN RTOS_QUEUES */
+	/* USER CODE BEGIN RTOS_QUEUES */
 	/* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
+	/* USER CODE END RTOS_QUEUES */
 
-  /* Create the thread(s) */
-  /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityLow, 0, 256);
-  defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
+	/* Create the thread(s) */
+	/* definition and creation of defaultTask */
+	osThreadDef(defaultTask, StartDefaultTask, osPriorityLow, 0, 256);
+	defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
-  /* definition and creation of ThreadP1 */
-  osThreadDef(ThreadP1, P1EntryFunc, osPriorityNormal, 0, 256);
-  ThreadP1Handle = osThreadCreate(osThread(ThreadP1), NULL);
+	/* definition and creation of ThreadP1 */
+	osThreadDef(ThreadP1, P1EntryFunc, osPriorityNormal, 0, 256);
+	ThreadP1Handle = osThreadCreate(osThread(ThreadP1), NULL);
 
-  /* definition and creation of ThreadP2 */
-  osThreadDef(ThreadP2, P2EntryFunc, osPriorityNormal, 0, 256);
-  ThreadP2Handle = osThreadCreate(osThread(ThreadP2), NULL);
+	/* definition and creation of ThreadP2 */
+	osThreadDef(ThreadP2, P2EntryFunc, osPriorityNormal, 0, 256);
+	ThreadP2Handle = osThreadCreate(osThread(ThreadP2), NULL);
 
-  /* definition and creation of SensorRead */
-  osThreadDef(SensorRead, SensorReadFunc, osPriorityNormal, 0, 256);
-  SensorReadHandle = osThreadCreate(osThread(SensorRead), NULL);
+	/* definition and creation of SensorRead */
+	osThreadDef(SensorRead, SensorReadFunc, osPriorityNormal, 0, 256);
+	SensorReadHandle = osThreadCreate(osThread(SensorRead), NULL);
 
-  /* definition and creation of DebugThread */
-  osThreadDef(DebugThread, DebugThreadFunc, osPriorityIdle, 0, 256);
-  DebugThreadHandle = osThreadCreate(osThread(DebugThread), NULL);
+	/* definition and creation of DebugThread */
+	osThreadDef(DebugThread, DebugThreadFunc, osPriorityIdle, 0, 256);
+	DebugThreadHandle = osThreadCreate(osThread(DebugThread), NULL);
 
-  /* definition and creation of InitTask */
-  osThreadDef(InitTask, InitTaskFunc, osPriorityHigh, 0, 512);
-  InitTaskHandle = osThreadCreate(osThread(InitTask), NULL);
+	/* definition and creation of InitTask */
+	osThreadDef(InitTask, InitTaskFunc, osPriorityHigh, 0, 512);
+	InitTaskHandle = osThreadCreate(osThread(InitTask), NULL);
 
-  /* definition and creation of TelemetryThread */
-  osThreadDef(TelemetryThread, TelemetryThreadFunc, osPriorityBelowNormal, 0, 512);
-  TelemetryThreadHandle = osThreadCreate(osThread(TelemetryThread), NULL);
+	/* definition and creation of TelemetryThread */
+	osThreadDef(TelemetryThread, TelemetryThreadFunc, osPriorityBelowNormal, 0, 512);
+	TelemetryThreadHandle = osThreadCreate(osThread(TelemetryThread), NULL);
 
-  /* USER CODE BEGIN RTOS_THREADS */
+	/* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
 
-  	osThreadSuspend(DebugThreadHandle);
-  	osThreadSuspend(TelemetryThreadHandle);
+	osThreadSuspend(DebugThreadHandle);
+	osThreadSuspend(TelemetryThreadHandle);
 
 	//sets semaphores to 0
 	osSemaphoreWait(P2ITSemHandle, osWaitForever);
@@ -378,7 +379,7 @@ void MX_FREERTOS_Init(void) {
 
 
 
-  /* USER CODE END RTOS_THREADS */
+	/* USER CODE END RTOS_THREADS */
 
 }
 
@@ -391,13 +392,13 @@ void MX_FREERTOS_Init(void) {
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void const * argument)
 {
-  /* USER CODE BEGIN StartDefaultTask */
+	/* USER CODE BEGIN StartDefaultTask */
 	//	/* Infinite loop */
 	//	for(;;)
 	//	{
 	//		osDelay(1);
 	//	}
-  /* USER CODE END StartDefaultTask */
+	/* USER CODE END StartDefaultTask */
 }
 
 /* USER CODE BEGIN Header_P1EntryFunc */
@@ -409,7 +410,7 @@ void StartDefaultTask(void const * argument)
 /* USER CODE END Header_P1EntryFunc */
 void P1EntryFunc(void const * argument)
 {
-  /* USER CODE BEGIN P1EntryFunc */
+	/* USER CODE BEGIN P1EntryFunc */
 
 
 
@@ -487,7 +488,8 @@ void P1EntryFunc(void const * argument)
 					telemetry.direction = PID_Get_Direction(&PidHandler);
 					telemetry.pid = PID_Get_Actuation(&PidHandler);
 
-					osMessagePut(P1TelemetryQueueHandle, (uint32_t) &telemetry, 200);
+					if (telemetry_enabled)
+						osMessagePut(P1TelemetryQueueHandle, (uint32_t) &telemetry, 200);
 
 
 
@@ -515,7 +517,7 @@ void P1EntryFunc(void const * argument)
 		}
 		osDelay(1);
 	}
-  /* USER CODE END P1EntryFunc */
+	/* USER CODE END P1EntryFunc */
 }
 
 /* USER CODE BEGIN Header_P2EntryFunc */
@@ -527,7 +529,7 @@ void P1EntryFunc(void const * argument)
 /* USER CODE END Header_P2EntryFunc */
 void P2EntryFunc(void const * argument)
 {
-  /* USER CODE BEGIN P2EntryFunc */
+	/* USER CODE BEGIN P2EntryFunc */
 
 	/*TODO: se non mi arriva l'interrupt bisognerebbe negoziare il ruolo di master/slave
 	 * quindi al posto di osWaitForever potrebbe esserci un timeout al cui scadere chiamiamo
@@ -613,7 +615,8 @@ void P2EntryFunc(void const * argument)
 					telemetry.direction = PID_Get_Direction(&PidHandler);
 					telemetry.pid = PID_Get_Actuation(&PidHandler);
 
-					osMessagePut(P2TelemetryQueueHandle, (uint32_t) &telemetry, 200);
+					if (telemetry_enabled)
+						osMessagePut(P2TelemetryQueueHandle, (uint32_t) &telemetry, 200);
 
 
 
@@ -634,7 +637,7 @@ void P2EntryFunc(void const * argument)
 		osDelay(1);
 
 	}
-  /* USER CODE END P2EntryFunc */
+	/* USER CODE END P2EntryFunc */
 }
 
 /* USER CODE BEGIN Header_SensorReadFunc */
@@ -646,7 +649,7 @@ void P2EntryFunc(void const * argument)
 /* USER CODE END Header_SensorReadFunc */
 void SensorReadFunc(void const * argument)
 {
-  /* USER CODE BEGIN SensorReadFunc */
+	/* USER CODE BEGIN SensorReadFunc */
 	/* Infinite loop */
 
 
@@ -712,7 +715,7 @@ void SensorReadFunc(void const * argument)
 		}
 		osDelay(1);
 	}
-  /* USER CODE END SensorReadFunc */
+	/* USER CODE END SensorReadFunc */
 }
 
 /* USER CODE BEGIN Header_DebugThreadFunc */
@@ -724,7 +727,7 @@ void SensorReadFunc(void const * argument)
 /* USER CODE END Header_DebugThreadFunc */
 void DebugThreadFunc(void const * argument)
 {
-  /* USER CODE BEGIN DebugThreadFunc */
+	/* USER CODE BEGIN DebugThreadFunc */
 	/* Infinite loop */
 	for(;;)
 	{
@@ -734,7 +737,7 @@ void DebugThreadFunc(void const * argument)
 		}
 		osDelay(1);
 	}
-  /* USER CODE END DebugThreadFunc */
+	/* USER CODE END DebugThreadFunc */
 }
 
 /* USER CODE BEGIN Header_InitTaskFunc */
@@ -746,7 +749,7 @@ void DebugThreadFunc(void const * argument)
 /* USER CODE END Header_InitTaskFunc */
 void InitTaskFunc(void const * argument)
 {
-  /* USER CODE BEGIN InitTaskFunc */
+	/* USER CODE BEGIN InitTaskFunc */
 	printf("[OS] - Start configuration thread\r\n");
 
 	int state = 0;
@@ -769,30 +772,30 @@ void InitTaskFunc(void const * argument)
 
 
 
-				if(MPU6050_Init(3) == MPU_OK){
+			if(MPU6050_Init(3) == MPU_OK){
 
 
 
-					//transmit mpu init success
-					printf("[MPU6050] init DONE!\n");
-					state = 1;
-					break;
+				//transmit mpu init success
+				printf("[MPU6050] init DONE!\n");
+				state = 1;
+				break;
 
 
-					//TODO inizializza l'angolo del servo a 0 (invia ai processi quest'informazione)
+				//TODO inizializza l'angolo del servo a 0 (invia ai processi quest'informazione)
 
 
-				} else {
+			} else {
 
-					printf("[MPU6050] init Failed!\r\n");
-					state = -1;
-					break;
-				}
-
-
+				printf("[MPU6050] init Failed!\r\n");
+				state = -1;
+				break;
+			}
 
 
-		//CASE 1: aspetto il comando di via, di ricalibrazione o di abort
+
+
+			//CASE 1: aspetto il comando di via, di ricalibrazione o di abort
 
 
 		case 1:
@@ -833,8 +836,8 @@ void InitTaskFunc(void const * argument)
 
 
 
-		//CASE 2 - Avvio il countdown
-		//TODO implementare l'i2c non bloccante oppure un thread a parte per le comunicazioni i2c
+			//CASE 2 - Avvio il countdown
+			//TODO implementare l'i2c non bloccante oppure un thread a parte per le comunicazioni i2c
 
 		case 2:
 
@@ -874,7 +877,8 @@ void InitTaskFunc(void const * argument)
 					osThreadResume(ThreadP1Handle);
 					osThreadResume(ThreadP2Handle);
 					osThreadResume(DebugThreadHandle);
-					osThreadResume(TelemetryThreadHandle);
+					if(telemetry_enabled)
+						osThreadResume(TelemetryThreadHandle);
 
 
 
@@ -916,8 +920,8 @@ void InitTaskFunc(void const * argument)
 				break;
 			}
 
-
-			osMessagePut(MissionTimerQueueHandle, (uint32_t) & timer, 1);
+			if (telemetry_enabled)
+				osMessagePut(MissionTimerQueueHandle, (uint32_t) & timer, 1);
 
 			osDelay(1);
 
@@ -950,64 +954,65 @@ void InitTaskFunc(void const * argument)
 	//kill this thread
 	//osThreadTerminate(InitTaskHandle);
 
-  /* USER CODE END InitTaskFunc */
+	/* USER CODE END InitTaskFunc */
 }
 
 /* USER CODE BEGIN Header_TelemetryThreadFunc */
 /**
-* @brief Function implementing the TelemetryThread thread.
-* @param argument: Not used
-* @retval None
-*/
+ * @brief Function implementing the TelemetryThread thread.
+ * @param argument: Not used
+ * @retval None
+ */
 /* USER CODE END Header_TelemetryThreadFunc */
 void TelemetryThreadFunc(void const * argument)
 {
-  /* USER CODE BEGIN TelemetryThreadFunc */
+	/* USER CODE BEGIN TelemetryThreadFunc */
 
 
 	telemetry_data telemetry_p1, telemetry_p2;
 	char msg[64];
 	int mission_timer;
 
-  /* Infinite loop */
-  for(;;)
-  {
+	/* Infinite loop */
+	for(;;)
+	{
 
-	  //get telemetry from P1 and P2
+		//get telemetry from P1 and P2
+		if (telemetry_enabled){
 
-	  telemetry_p1 = telemetry_queue_receive(P1TelemetryQueueHandle);
-	  telemetry_p2 = telemetry_queue_receive(P2TelemetryQueueHandle);
+			telemetry_p1 = telemetry_queue_receive(P1TelemetryQueueHandle);
+			telemetry_p2 = telemetry_queue_receive(P2TelemetryQueueHandle);
 
-	  //get mission timer
+			//get mission timer
 
-	  osEvent event = osMessageGet(MissionTimerQueueHandle, 10);
-	  	if (event.status == osEventMessage){
-	  		mission_timer = *((int *) event.value.v);
-	  	}else{
-	  		mission_timer = -5;
-	  	}
+			osEvent event = osMessageGet(MissionTimerQueueHandle, 10);
+			if (event.status == osEventMessage){
+				mission_timer = *((int *) event.value.v);
+			}else{
+				mission_timer = -5;
+			}
 
-	  // assemble telemetry message
+			// assemble telemetry message
 
-	  snprintf(msg, sizeof(msg), "P1:%f,%f,%d;P2:%f,%f,%d;T:%d",
-			  	  	  	  	  	  	  	  	  telemetry_p1.angle,
-											  telemetry_p1.pid,
-											  telemetry_p1.direction,
-											  telemetry_p2.angle,
-											  telemetry_p2.pid,
-											  telemetry_p2.direction,
-											  mission_timer
-	  	  	  	  	  	  	  	  	  	  	  );
+			snprintf(msg, sizeof(msg), "P1:%f,%f,%d;P2:%f,%f,%d;T:%d",
+					telemetry_p1.angle,
+					telemetry_p1.pid,
+					telemetry_p1.direction,
+					telemetry_p2.angle,
+					telemetry_p2.pid,
+					telemetry_p2.direction,
+					mission_timer
+			);
 
-	  HAL_I2C_Slave_Transmit(&hi2c3, (uint8_t *)msg, (uint16_t) 64, HAL_MAX_DELAY);
+			HAL_I2C_Slave_Transmit(&hi2c3, (uint8_t *)msg, (uint16_t) 64, HAL_MAX_DELAY);
 
-	  printf("telemetry transmitted!\n");
+			printf("telemetry transmitted!\n");
 
 
-
-    osDelay(1);
-  }
-  /* USER CODE END TelemetryThreadFunc */
+		}
+		osDelay(1);
+	}
+	/* USER CODE END TelemetryThreadFunc */
 }
 
 /* Private application code --------------------------------------------------*/
