@@ -173,7 +173,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if (htim->Instance == TIM7){
 		osSemaphoreRelease(MissionTimerSemHandle);
 
-		//TODO implements 1 second timer
+		printf("mission timer tick\n");
 
 	}
 }
@@ -203,12 +203,12 @@ void get_I2C_confermation( uint8_t * pData, uint8_t * receiveBuf){		// uint8_t *
 
 
 	HAL_I2C_Slave_Transmit(&hi2c3, pData, (uint16_t) 32, HAL_MAX_DELAY);
-	printf("transmitted!\n");
+	printf("transmitted: STATE 1 WFC\n");
 
 
-	printf("wait to receive ");
+	printf("wait to receive\n");
 	HAL_I2C_Slave_Receive(&hi2c3, receiveBuf, (uint16_t) 1, HAL_MAX_DELAY);
-	printf("received: %s\n", receiveBuf);
+	printf("	received: %d\n", receiveBuf[0]);
 
 //	HAL_I2C_Slave_Receive_IT(&hi2c3, pData, (uint16_t) 32);
 
@@ -754,9 +754,6 @@ void InitTaskFunc(void const * argument)
 	int in_powered_ascent = 0;
 	uint8_t cmd1[32] = "STATE 1 WFC";
 
-	//uint8_t msg[32]="TELEMETRY";   //TODO temporaneo, da capire quale telemetria inviare
-
-
 	uint8_t receiveBuf[1];
 
 	for(;;){
@@ -766,8 +763,6 @@ void InitTaskFunc(void const * argument)
 		//CASE 0: Inizializzo l'mpu
 
 		case 0:
-
-			//transmit state 0
 
 
 			//first loop initialization
@@ -808,7 +803,7 @@ void InitTaskFunc(void const * argument)
 
 
 			if ( receiveBuf[0] == 1){
-				printf("[OS] Re-calibration");
+				printf("command 1: re-calibration\n");
 
 				MPU6050_Calculate_IMU_Error(2);
 				printf("Gz: %f Gz_error: %f\r\n", Gz, GyroErrorZ);
@@ -819,7 +814,7 @@ void InitTaskFunc(void const * argument)
 
 
 			if ( receiveBuf[0] == 2){
-				printf("[OS] Starting countdown");
+				printf("command 2: starting mission countdown\n");
 
 				state = 2;
 				break;
@@ -829,7 +824,7 @@ void InitTaskFunc(void const * argument)
 
 
 			if (receiveBuf[0] == -1){
-				printf("[OS] ABORT");
+				printf("command -1: ABORT\n");
 
 				state = -1;
 				break;
@@ -861,8 +856,10 @@ void InitTaskFunc(void const * argument)
 
 			//get mission timer semaphore, and increment timer by 1 second
 
-			if(osSemaphoreWait(MissionTimerSemHandle, osWaitForever) == HAL_OK)
+			if(osSemaphoreWait(MissionTimerSemHandle, osWaitForever) == HAL_OK){
+				printf("Mission timer: %d\n",timer);
 				timer ++;
+			}
 
 
 			if (timer == 0 && !in_powered_ascent){
@@ -919,8 +916,8 @@ void InitTaskFunc(void const * argument)
 				break;
 			}
 
-			printf("Mission timer: %d\n",timer);
-			osMessagePut(MissionTimerQueueHandle, (uint32_t) & timer, 1000);
+
+			osMessagePut(MissionTimerQueueHandle, (uint32_t) & timer, 1);
 
 			osDelay(1);
 
