@@ -69,6 +69,8 @@ void Error_Handler(void);
 #define Alive_backup_GPIO_Port GPIOC
 #define DirectionP2_Pin GPIO_PIN_12
 #define DirectionP2_GPIO_Port GPIOB
+#define GreenLED_Pin GPIO_PIN_10
+#define GreenLED_GPIO_Port GPIOA
 #define DirectionP1_Pin GPIO_PIN_11
 #define DirectionP1_GPIO_Port GPIOA
 #define Alive_Pin GPIO_PIN_12
