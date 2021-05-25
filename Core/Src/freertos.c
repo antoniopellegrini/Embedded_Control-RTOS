@@ -65,6 +65,7 @@ uint32_t samples_per_seconds = 1;
 uint32_t multiplier = 1;
 uint32_t sample_time;
 
+
 uint8_t debug_active = 1;
 uint8_t telemetry_enabled = 1;
 uint8_t is_Master = 1;   // 0 --> slave; 1--> master
@@ -83,6 +84,10 @@ float kd = 22.5;
 //float kd = 15.46;
 
 
+
+
+
+//VARIABILI GLOBALI BRUTTE
 float debug_f1;
 float debug_f2;
 
@@ -91,6 +96,11 @@ int debug_direction_P2;
 
 float debug_PID_P1;
 float debug_PID_P2;
+
+float debug_desired_angle_P1;
+float debug_desired_angle_P2;
+
+int mission_timer;
 
 typedef struct angle_data{
 	union{
@@ -489,7 +499,7 @@ void P1EntryFunc(void const * argument)
 
 
 					desired_angle = 6 * mission_time;
-
+					debug_desired_angle_P1 = desired_angle;
 
 
 
@@ -632,7 +642,7 @@ void P2EntryFunc(void const * argument)
 
 
 					desired_angle = 6 * mission_time;
-
+					debug_desired_angle_P2 = desired_angle;
 
 
 
@@ -736,7 +746,7 @@ void SensorReadFunc(void const * argument)
 
 
 				//ignore small angles:
-				if((fabs(yaw.angle.f[0]-yaw_new.angle.f[0])<(Gz_stdev))){
+				if((fabs(yaw.angle.f[0]-yaw_new.angle.f[0])<(Gz_stdev*0.15))){
 					yaw_new.angle.f[0] = yaw.angle.f[0];
 				}
 
@@ -784,7 +794,7 @@ void DebugThreadFunc(void const * argument)
 	{
 		if(osSemaphoreWait(DebugThreadSemHandle, osWaitForever) == osOK){
 			//printf("debug-thread: P1_angle=%f, P2_angle=%f\r\n",debug_f1,debug_f2);
-			printf("DEBUG  --- P1_pid=%f P1_direction=%d   ---  P2_pid=%f P2_direction=%d\r\n", debug_PID_P1,debug_direction_P1, debug_PID_P2, debug_direction_P2);
+			printf("[DEBUG] P1_pid=%f;  P2_pid=%f | P1_angle=%f, P2_angle=%f \r\n", debug_PID_P1, debug_PID_P2, debug_f1,debug_f2);
 		}
 		osDelay(1);
 	}
@@ -1007,6 +1017,7 @@ void InitTaskFunc(void const * argument)
 					//osMessagePut(MissionTimerQueueHandle, (uint32_t) & mission_data, 1);
 				}
 				mission_data.timer ++;
+				mission_timer = mission_data.timer;
 
 			}
 
@@ -1022,6 +1033,12 @@ void InitTaskFunc(void const * argument)
 			HAL_I2C_Slave_Transmit_DMA(&hi2c3, (uint8_t *)"STATE 4 COASTING ", (uint16_t) 64);
 
 			osDelay(1000);
+
+
+
+
+
+
 
 			// TODO get angles from P1,P2 and if needed command a trajectory adjustment
 
@@ -1094,11 +1111,13 @@ void TelemetryThreadFunc(void const * argument)
 
 			// assemble telemetry message
 
-			snprintf(msg, sizeof(msg), "%d;%d;%d;%0.2f,%0.0f;%0.2f,%0.0f",
+			snprintf(msg, sizeof(msg), "%d;%d;%d;%0.2f;%0.2f,%0.0f;%0.2f,%0.0f",
 
-					m_data.is_master,
+					is_Master,
 					m_data.state,
-					m_data.timer,
+					//m_data.timer,
+					mission_timer,
+					debug_desired_angle_P1,
 					telemetry_p1.angle,
 					telemetry_p1.pid,
 					telemetry_p2.angle,
