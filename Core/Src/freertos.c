@@ -65,7 +65,7 @@ uint32_t samples_per_seconds = 1;
 uint32_t multiplier = 1;
 uint32_t sample_time;
 
-uint8_t debug_active = 0;
+uint8_t debug_active = 1;
 uint8_t telemetry_enabled = 1;
 uint8_t is_Master = 1;   // 0 --> slave; 1--> master
 //if timer interrupt is enabled leave this in slave mode
@@ -212,14 +212,11 @@ telemetry_data telemetry_queue_receive(osMessageQId queue_id){
 
 void get_I2C_confermation( uint8_t * pData, uint8_t * receiveBuf){		// uint8_t * pData == uint8_y pData[]  <<-- stessa cosa
 
-
 	HAL_I2C_Slave_Transmit(&hi2c3, pData, (uint16_t) 32, HAL_MAX_DELAY);
-	printf("transmitted: STATE 1 WFC\n");
 
-
-	printf("wait to receive\n");
+	printf("Wait for CMD...\n");
 	HAL_I2C_Slave_Receive(&hi2c3, receiveBuf, (uint16_t) 1, HAL_MAX_DELAY);
-	printf("	received: %d\n", receiveBuf[0]);
+	printf("	Received CMD: %d\n", receiveBuf[0]);
 
 	//	HAL_I2C_Slave_Receive_IT(&hi2c3, pData, (uint16_t) 32);
 
@@ -232,7 +229,6 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c3){
 
 	if (hi2c3->Instance == I2C3){
 
-		printf("REQUEST RECEIVEDDDDDDD\n");
 
 	}
 
@@ -241,7 +237,7 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c3){
 
 void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c3){
 
-	printf("Callback - Transmission completed\n");
+	//printf("Callback - Transmission completed\n");
 
 }
 
@@ -612,7 +608,7 @@ void P2EntryFunc(void const * argument)
 				//start from 0
 				if (first_loop){
 					first_angle = data.angle.f[0];
-					printf("[!] First angle: %f\r\n", first_angle );
+					printf("[!] First ANGLE: %f\r\n", first_angle );
 					first_loop = 0;
 					starting_time = xTaskGetTickCount();
 
@@ -863,18 +859,7 @@ void InitTaskFunc(void const * argument)
 		case 1:
 			mission_data.is_master = is_Master;
 
-			//			if (!is_Master){
-			//				HAL_I2C_DeInit(&hi2c3);
-			//				hi2c3.Init.OwnAddress1 = 3<1;
-			//				if (HAL_I2C_Init(&hi2c3) != HAL_OK)
-			//				  {
-			//				    Error_Handler();
-			//				  } else {
-			//					  printf("REINITIALIZED I2C for SLAVE\n");
-			//				  }
-			//			}
 
-			mission_data.state=1;
 
 			get_I2C_confermation( cmd1, receiveBuf);
 
@@ -886,6 +871,8 @@ void InitTaskFunc(void const * argument)
 				MPU6050_Calculate_IMU_Error(2);
 				printf("Gz: %f Gz_error: %f\r\n", Gz, GyroErrorZ);
 				printf("[OS] Calibration done\r\n");
+				receiveBuf[0] = 0;
+				break;
 
 			}
 
@@ -953,7 +940,7 @@ void InitTaskFunc(void const * argument)
 						//master
 
 
-						printf("[OS] MPU is Master - ");
+						printf("[OS] MPU is MASTER - ");
 
 						osThreadResume(SensorReadHandle);
 						osThreadResume(ThreadP1Handle);
@@ -977,6 +964,8 @@ void InitTaskFunc(void const * argument)
 
 					}else{
 
+						printf("[OS] MPU is Slave, waiting for external interrupt...\r\n\n");
+
 						//slave
 						osThreadResume(SensorReadHandle);
 						osThreadResume(ThreadP1Handle);
@@ -985,7 +974,7 @@ void InitTaskFunc(void const * argument)
 
 
 						in_powered_ascent = 1;
-						printf("[OS] MPU is Slave, waiting for external interrupt...\r\n\n");
+
 					}
 
 				}
