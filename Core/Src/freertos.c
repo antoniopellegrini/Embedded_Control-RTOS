@@ -813,10 +813,8 @@ void InitTaskFunc(void const * argument)
 	mission_data.state = 0;
 
 
-
-
 	int in_powered_ascent = 0;
-	uint8_t cmd1[32] = "STATE 1 WFC";
+
 	char msg[64];
 	uint8_t receiveBuf[1];
 
@@ -834,9 +832,7 @@ void InitTaskFunc(void const * argument)
 			//first loop initialization
 
 
-
 			if(MPU6050_Init(3) == MPU_OK){
-
 
 
 				//transmit mpu init success
@@ -858,25 +854,27 @@ void InitTaskFunc(void const * argument)
 
 
 
-			//CASE 1: aspetto il comando di via, di ricalibrazione o di abort
+
 
 
 		case 1:
 			mission_data.is_master = is_Master;
 
-
-
-			get_I2C_confermation( cmd1, receiveBuf);
+			//CASE 1: aspetto il comando di via, di ricalibrazione o di abort
+			get_I2C_confermation( "[MPU] Waiting for command", receiveBuf);
 
 
 
 			if ( receiveBuf[0] == 1){
-				printf("command 1: re-calibration\n");
+
+				printf("Start calibration\n");
 
 				MPU6050_Calculate_IMU_Error(2);
 				printf("Gz: %f Gz_error: %f\r\n", Gz, GyroErrorZ);
 				printf("[OS] Calibration done\r\n");
 				receiveBuf[0] = 0;
+
+				HAL_I2C_Slave_Transmit(&hi2c3, (uint8_t *)"[MPU] Calibration done", (uint16_t) 32, HAL_MAX_DELAY);
 				break;
 
 			}
@@ -884,7 +882,7 @@ void InitTaskFunc(void const * argument)
 
 
 			if ( receiveBuf[0] == 2){
-				printf("command 2: starting mission countdown\n");
+				printf("Starting mission countdown\n");
 
 				mission_data.state = 2;
 				break;
@@ -894,7 +892,7 @@ void InitTaskFunc(void const * argument)
 
 
 			if (receiveBuf[0] == -1){
-				printf("command -1: ABORT\n");
+				printf("ABORT\n");
 
 				mission_data.state = -1;
 				break;
@@ -943,8 +941,6 @@ void InitTaskFunc(void const * argument)
 							mission_data.state,
 							mission_data.is_master
 					);
-
-
 
 					HAL_I2C_Slave_Transmit_DMA(&hi2c3, (uint8_t *)msg, (uint16_t) 64);
 
@@ -1033,7 +1029,7 @@ void InitTaskFunc(void const * argument)
 			mission_data.state = 4;
 
 			printf("[state 4 = COASTING]\n");
-			HAL_I2C_Slave_Transmit_DMA(&hi2c3, (uint8_t *)"STATE 4 COASTING ", (uint16_t) 64);
+			HAL_I2C_Slave_Transmit_DMA(&hi2c3, (uint8_t *)"[MPU] Coasting", (uint16_t) 64);
 
 			osDelay(1000);
 
