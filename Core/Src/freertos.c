@@ -68,7 +68,7 @@ uint32_t sample_time;
 
 uint8_t debug_active = 1;
 uint8_t telemetry_enabled = 1;
-uint8_t is_Master = 1;   // 0 --> slave; 1--> master
+uint8_t is_Master = 0;   // 0 --> slave; 1--> master
 //if timer interrupt is enabled leave this in slave mode
 
 
@@ -950,7 +950,7 @@ void InitTaskFunc(void const * argument)
 
 
 
-			mission_data.state=2;
+			//mission_data.state=2;
 
 			//se arriva un messaggio i2c -1 devo abortire
 
@@ -968,11 +968,12 @@ void InitTaskFunc(void const * argument)
 		case 3:
 
 
-			mission_data.state=3;
+			//mission_data.state=3;
 			//wait 1 second timer
 
 			if(osSemaphoreWait(MissionTimerSemHandle, osWaitForever) == HAL_OK){
 
+				mission_data.timer ++;
 
 				if (mission_data.timer == 0 && !in_powered_ascent){
 
@@ -1016,18 +1017,12 @@ void InitTaskFunc(void const * argument)
 
 				if (mission_data.timer == 30){
 
+					mission_data.timer ++;
+
 					//set alive to false
 					HAL_GPIO_WritePin(Alive_GPIO_Port, Alive_Pin, 1);
 
 					// stop interrupt timer esterno
-					if (is_Master)
-						HAL_TIM_Base_Stop_IT(&htim2);
-
-					osThreadSuspend(SensorReadHandle);
-					osThreadSuspend(DebugThreadHandle);
-					osThreadSuspend(ThreadP1Handle);
-					osThreadSuspend(ThreadP2Handle);
-					osThreadSuspend(TelemetryThreadHandle);
 
 					mission_data.state = 4;
 
@@ -1040,7 +1035,7 @@ void InitTaskFunc(void const * argument)
 					//osMessagePut(MissionTimerQueueHandle, (uint32_t) & mission_data, 1);
 				}
 
-				mission_data.timer ++;
+
 
 				mission_timer = mission_data.timer;
 
@@ -1052,13 +1047,23 @@ void InitTaskFunc(void const * argument)
 
 
 		case 4:
-			mission_data.state=4;
+//mission_data.state=4;
 
 
 			printf("[state 4 = COASTING]\n");
 			HAL_I2C_Slave_Transmit_DMA(&hi2c3, (uint8_t *)"[MPU] Coasting", (uint16_t) 64);
 
-			osDelay(1000);
+			osDelay(5000);
+
+			if (is_Master)
+				HAL_TIM_Base_Stop_IT(&htim2);
+
+			osThreadSuspend(SensorReadHandle);
+			osThreadSuspend(DebugThreadHandle);
+			osThreadSuspend(ThreadP1Handle);
+			osThreadSuspend(ThreadP2Handle);
+			osThreadSuspend(TelemetryThreadHandle);
+
 
 
 			// TODO get angles from P1,P2 and if needed command a trajectory adjustment
