@@ -111,8 +111,8 @@ void loop() {
             request_2(board_1_ID);
             request_2(board_2_ID);  
   
-            Serial.println(strcmp(reply_str, "STATE 1 WFC"));
-              if (strcmp(reply_str, "STATE 1 WFC") == 0) {  // same strings    
+            Serial.println(strcmp(reply_str, "[MPU] Wait for command"));
+              if (strcmp(reply_str, "[MPU] Wait for command") == 0) {  // same strings    
                   stato = 1;
                   Serial.println("\n Insert command to send\n1: Recalibrate\n2: Start countdown");
                   break;
@@ -121,14 +121,15 @@ void loop() {
           break;
 
        case 1:
-          Serial.print("\nstato:");
-          Serial.println(stato);
+
           Serial.println("/nInsert command \n1: Recalibrate\n2: Start countdown");
           if (cmd == 1){
             Serial.println("\n->Recalibrate");
             //Send(1);
             Send_2(board_1_ID,1);  //recalibrate
             Send_2(board_2_ID,1);  //recalibrate
+
+            //'[MPU] Calibration done'
 
             stato = 0;
 			
@@ -159,8 +160,7 @@ void loop() {
           break;
 
         case 3:
-          Serial.print("\nstato:");
-          Serial.println(stato);
+          
           while(true){
             request();
             }       

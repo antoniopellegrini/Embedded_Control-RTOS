@@ -915,7 +915,7 @@ void InitTaskFunc(void const * argument)
 				printf("[OS] Calibration done\r\n");
 				receiveBuf[0] = 0;
 
-				HAL_I2C_Slave_Transmit_DMA(&hi2c3, (uint8_t *)"[MPU] Calibration done", (uint16_t) 64);
+				//HAL_I2C_Slave_Transmit_DMA(&hi2c3, (uint8_t *)"[MPU] Calibration done", (uint16_t) 64);
 
 				break;
 
@@ -1014,7 +1014,7 @@ void InitTaskFunc(void const * argument)
 
 
 
-				if (mission_data.timer == 32){
+				if (mission_data.timer == 30){
 
 					//set alive to false
 					HAL_GPIO_WritePin(Alive_GPIO_Port, Alive_Pin, 1);
@@ -1039,8 +1039,11 @@ void InitTaskFunc(void const * argument)
 					//osSemaphoreRelease(TelemetryThreadSemHandle);
 					//osMessagePut(MissionTimerQueueHandle, (uint32_t) & mission_data, 1);
 				}
+
 				mission_data.timer ++;
+
 				mission_timer = mission_data.timer;
+
 
 			}
 
