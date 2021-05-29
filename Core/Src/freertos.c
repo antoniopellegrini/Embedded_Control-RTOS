@@ -585,6 +585,7 @@ void P1EntryFunc(void const * argument)
 
 			//debug
 			if(debug_active){
+
 				debug_f1=current_angle;
 				debug_direction_P1 = PID_Get_Direction(&PidHandler);
 				debug_PID_P1 = PID_Get_Actuation(&PidHandler);
@@ -785,16 +786,9 @@ void SensorReadFunc(void const * argument)
 
 
 				//ignore small angles:
-				if((fabs(yaw.angle.f[0]-yaw_new.angle.f[0])<(Gz_stdev*0.15))){
-					yaw_new.angle.f[0] = yaw.angle.f[0];
-				}
-
-				//normalize the angle between -180° and 180°
-
-				//				if (yaw_new.angle.f[0] >= 180.0)
-				//					yaw_new.angle.f[0] -= 360;
-				//				if (yaw_new.angle.f[0] <= -180.0)
-				//					yaw_new.angle.f[0] += 360;
+//				if((fabs(yaw.angle.f[0]-yaw_new.angle.f[0])<(Gz_stdev*0.15))){
+//					yaw_new.angle.f[0] = yaw.angle.f[0];
+//				}
 
 
 				yaw_new.crc = HAL_CRC_Calculate(&hcrc, yaw_new.angle.i,1);
@@ -920,6 +914,9 @@ void InitTaskFunc(void const * argument)
 				printf("Gz: %f Gz_error: %f\r\n", Gz, GyroErrorZ);
 				printf("[OS] Calibration done\r\n");
 				receiveBuf[0] = 0;
+
+				HAL_I2C_Slave_Transmit_DMA(&hi2c3, (uint8_t *)"[MPU] Calibration done", (uint16_t) 64);
+
 				break;
 
 			}
@@ -981,8 +978,6 @@ void InitTaskFunc(void const * argument)
 
 					//set alive to true
 					HAL_GPIO_WritePin(Alive_GPIO_Port, Alive_Pin, 0);
-
-
 
 
 
@@ -1058,14 +1053,9 @@ void InitTaskFunc(void const * argument)
 
 
 			printf("[state 4 = COASTING]\n");
-			HAL_I2C_Slave_Transmit_DMA(&hi2c3, (uint8_t *)"[MPU] Coasting ", (uint16_t) 64);
+			HAL_I2C_Slave_Transmit_DMA(&hi2c3, (uint8_t *)"[MPU] Coasting", (uint16_t) 64);
 
 			osDelay(1000);
-
-
-
-
-
 
 
 			// TODO get angles from P1,P2 and if needed command a trajectory adjustment
@@ -1163,7 +1153,10 @@ void TelemetryThreadFunc(void const * argument)
 
 
 			//HAL_I2C_Slave_Transmit_DMA(hi2c, pData, Size);
+
+
 			if (debug_active){
+
 				//
 				//				printf("I2C message: ");
 				//				printf(msg);
