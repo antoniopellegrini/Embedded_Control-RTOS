@@ -5,11 +5,12 @@ class Plot:
 
     def __init__(self):
 
+        self.start_counter = False
         self.elapsed_time = 0
         self.Initial_time_angle = 0.0
         self.direction_angle = 0.0
         self.degrees_per_second = 6
-        WIDTH, HEIGHT = 0, 400
+        WIDTH, HEIGHT = -100, 400
         self.window = turtle.Screen()
         self.window.tracer(0)
         self.rocket_B1 = turtle.Turtle()
@@ -21,12 +22,23 @@ class Plot:
         self.timer_text.setposition(WIDTH, HEIGHT)
         self.timer_text.hideturtle()
         self.timer_text.clear()
+
+        self.timer_PC = turtle.Turtle()
+        self.timer_PC.setposition(WIDTH, HEIGHT - 40)
+        self.timer_PC.hideturtle()
+        self.timer_PC.clear()
+
+        self.timer_difference = turtle.Turtle()
+        self.timer_difference.setposition(WIDTH, HEIGHT - 70)
+        self.timer_difference.hideturtle()
+        self.timer_difference.clear()
+
         #t = turtle.getscreen()
         line_shape = ((0, -1000), (0, 1000))
         rocket_shape = ((-15,15),(-10,15),(-10,20),(-2.5,20),(-2.5,30),(2.5,30),(2.5,20),(10,20),(10,15),(15,15),(15,0),(5,0)
                         ,(5,-5),(15,-5),(15,-10),(20,-10),(20,-20),(15,-20),(15,-15),(10,-15),(10,-10),(5,-10),(5,-15)
-                        ,(-5,-15),(-5,-10),(-10,-10),(-10,-15),(-15,-15),(-15,-20),(-20,-20),(-20,-10),(-15,-10),(-15,-5),(-5,-5)
-                        ,(-5,0),(-15,0))
+                        ,(-5,-15),(-5,-10),(-10,-10),(-10,-15),(-15,-15),(-15,-20),(-20,-20),(-20,-10),(-15,-10),
+                        (-15,-5),(-5,-5), (-5,0),(-15,0))
 
         turtle.register_shape('rocket', rocket_shape)
         turtle.register_shape('line', line_shape)
@@ -53,8 +65,13 @@ class Plot:
 
         if self.elapsed_time <= 30:
             self.elapsed_time = abs(self.Initial_time_angle - time.time())
+            #self.timer_PC.write(f' PC_Time: {self.elapsed_time}', font=('Courier', 20, "normal"))
             #print(self.elapsed_time)
             if self.elapsed_time <= 30.0:
+                self.timer_PC.clear()
+                self.timer_difference.clear()
+                self.timer_PC.write(f' PC_Time: {round(self.elapsed_time,2)}', font=('Courier', 20, "normal"))
+                self.timer_difference.write(f' Difference: {round(self.elapsed_time - self.board_time,2)}', font=('Courier', 20, "normal"))
                 self.direction_angle = self.elapsed_time * self.degrees_per_second
 
 
@@ -63,6 +80,7 @@ class Plot:
     def update(self, rocket_angle_1, rocket_angle_2, line_angle, time, is_started):
 
         time = int(time)
+        self.board_time = float(time)
         self.rocket_B1.tiltangle(rocket_angle_1)
         self.rocket_B2.tiltangle(rocket_angle_2)
         self.rocket_B1_line.tiltangle(rocket_angle_1)
@@ -71,7 +89,10 @@ class Plot:
         if is_started:
 
             if time == 0:
-                self.set_angle()
+                if not self.start_counter:
+                    self.set_angle()    # TODO: Run only once?
+                    self.start_counter = True
+                self.startDirection()
                 self.timer_text.clear()
                 self.timer_text.color('Yellow')
                 #self.timer_text.write(f'Mission starts in:\n T: {time}', font=('Courier', 30, "normal"))
@@ -91,7 +112,7 @@ class Plot:
                 #self.timer_text.write(f' T: {time}', font=('Courier', 30, "normal"))
                 self.timer_text.color('Red')
 
-            elif time > 30:
+            elif time >= 30:
                 self.timer_text.clear()
                 self.timer_text.write(f'Mission END\n T: {time}', font=('Courier', 30, "normal"))
                 # self.timer_text.write(f' T: {time}', font=('Courier', 30, "normal"))
