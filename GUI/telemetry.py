@@ -4,6 +4,9 @@ from platform import system
 import serial.tools.list_ports
 from serial.tools import list_ports
 
+null_text = [b'Board: 2 :                                                                 \x03.\r\n',
+             b'Board: 3 :                                                                 \x03.\r\n',
+             b""]
 
 def find_arduino_port(b_id="Arduino (www.arduino.cc)"):
     devices = []
@@ -105,7 +108,7 @@ class telemetry:
                     print(f"Read: {read_val}")
 
                     return read_val
-
+# b'Board: 2 :                                                                 \x03.\r\n'
 
             except serial.SerialException:
                 continue
@@ -116,7 +119,8 @@ class telemetry:
                 self.send(text)
 
             read_val = self.ser.readline()
-            if read_val != b"":
+            #if read_val != b"":
+            if read_val not in null_text:
                 print(f"Read: {read_val}")
                 return read_val
 
