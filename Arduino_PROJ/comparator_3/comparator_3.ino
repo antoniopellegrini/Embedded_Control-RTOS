@@ -186,7 +186,8 @@ int compare_values(int alive_status){  // compare values from different boards
 
   if (alive_status == 0){ // all alive
     if( abs(A1B1 - A1B2) < margin && abs(A1B2 - A2B2) < margin  && D1B1^D1B2==0  ){
-      if( abs(A1B1 - A1B2) < outer_margin){
+      //if( abs(A1B1 - A1B2) < outer_margin){ 
+      if( ( abs(A1B1 - A2B1) - abs(A1B2 - A2B2)) < outer_margin){   // TODO: NOT TESTED YET
         return 0;
       }else{
         return 1;        

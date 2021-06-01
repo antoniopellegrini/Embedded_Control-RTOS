@@ -71,6 +71,7 @@ uint8_t telemetry_enabled = 1;
 uint8_t is_Master = 0;   // 0 --> slave; 1--> master
 //if timer interrupt is enabled leave this in slave mode
 
+int softError = 0;
 
 //pid
 // float kp = 22,5 //ORIGINALE
@@ -171,8 +172,6 @@ osSemaphoreId CountingSemaphoreHandle;
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
-
-
 	if(GPIO_Pin == InputInterrupt_Pin){
 
 		//osThreadResume(InterruptSyncHandle);
@@ -180,6 +179,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
 		osSemaphoreRelease(P1ITSemHandle);
 		osSemaphoreRelease(P2ITSemHandle);
+	}
+
+	if (GPIO_Pin == USER_BUTTON_Pin){ // create Soft error
+
+		if(softError == 0){
+			softError = 1;
+		}
+		else{
+			softError = 0;
+		}
 
 	}
 }
@@ -525,10 +534,20 @@ void P1EntryFunc(void const * argument)
 
 				current_angle = data.angle.f[0] - first_angle ;
 
+				// Soft error
+
+				if(softError == 1 ){
+					data.angle.f[0] = data.angle.f[0] + 80.0;
+					printf("Soft Error \n\r");
+				}
+
 				//calculate crc and check if is equal to the one received
 				crc = HAL_CRC_Calculate(&hcrc, data.angle.i,1);
 
 				if (crc == data.crc){
+
+					//set alive to true
+					HAL_GPIO_WritePin(Alive_GPIO_Port, Alive_Pin, 0);
 
 
 					current_time = xTaskGetTickCount() - starting_time;
@@ -579,6 +598,11 @@ void P1EntryFunc(void const * argument)
 
 				} else {
 					printf("P1 - CRC Error\r\n");
+
+					//set alive to False
+					HAL_GPIO_WritePin(Alive_GPIO_Port, Alive_Pin, 1);
+
+
 
 					/* TODO: Che succede se il CRC è errato?
 					 *

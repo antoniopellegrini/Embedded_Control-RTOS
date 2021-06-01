@@ -121,7 +121,6 @@ class Application(tk.Frame):
             if self.quit_graph:
                 self.g.quit_window()
 
-
             self.g.update(self.B1_direction, self.B2_direction, self.direction, self.time, self.is_started)
 
 
