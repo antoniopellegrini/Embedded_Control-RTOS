@@ -88,30 +88,26 @@ MPU6050_StatusTypeDef MPU6050_Init (MPU_Data * mpu_data, uint8_t gyro_fs_select)
 
 float MPU6050_Read_Gyro (MPU_Data * mpu_data)
 {
-	uint8_t Rec_Data[2];
-	uint16_t temp;
+
+	uint8_t Rec_Data[6];
+	uint16_t Gyro_X_RAW,Gyro_Y_RAW,Gyro_Z_RAW;
 
 	// Read 6 BYTES of data starting from GYRO_XOUT_H register
 
-//	HAL_I2C_Mem_Read (&hi2c2, MPU6050_ADDR, GYRO_XOUT_H_REG, 1, Rec_Data, 6, 1000);
-	HAL_I2C_Mem_Read (&hi2c2, MPU6050_ADDR, GYRO_ZOUT_H_REG, 1, Rec_Data, 2, 1000);
+	HAL_I2C_Mem_Read (&hi2c2, MPU6050_ADDR, GYRO_XOUT_H_REG, 1, Rec_Data, 6, 1000);
 
-//	Gyro_X_RAW = (int16_t)(Rec_Data[0] << 8 | Rec_Data [1]);
-//	Gyro_Y_RAW = (int16_t)(Rec_Data[2] << 8 | Rec_Data [3]);
-//	Gyro_Z_RAW = (int16_t)(Rec_Data[4] << 8 | Rec_Data [5]);
-
-	temp = (int16_t)(Rec_Data[0] << 8 | Rec_Data [1]);
-
+	Gyro_X_RAW = (int16_t)(Rec_Data[0] << 8 | Rec_Data [1]);
+	Gyro_Y_RAW = (int16_t)(Rec_Data[2] << 8 | Rec_Data [3]);
+	Gyro_Z_RAW = (int16_t)(Rec_Data[4] << 8 | Rec_Data [5]);
 
 	/*** convert the RAW values into dps (°/s)
 	     we have to divide according to the Full scale value set in FS_SEL
 	     I have configured FS_SEL = 0. So I am dividing by 131.0
 	     for more details check GYRO_CONFIG Register              ****/
+	printf("gyroz: %d, gyrox =%d", Gyro_Z_RAW, Gyro_X_RAW);
+	printf("Mult factor %d\n",mpu_data->FS_Mult_Factor);
 
-	//Gx = Gyro_X_RAW/131.0;
-	//Gy = Gyro_Y_RAW/131.0;
-
-	return  (temp/131.0)* mpu_data->FS_Mult_Factor;
+	return  (Gyro_Z_RAW/131.0)* mpu_data->FS_Mult_Factor;
 
 }
 
@@ -138,16 +134,18 @@ void MPU6050_Calculate_IMU_Error(MPU_Data * mpu_data, int seconds){
 
 	for(int i = 0; i < numOfIter; i++){
 		reading = MPU6050_Read_Gyro(mpu_data);
+
 		delta = reading - mean;
 		mean = mean + delta / (i+1);
 		msq = msq + delta  * (reading - mean);
-		osDelay(5);
+		HAL_Delay(5);
+		//osDelay(5);
 	}
 
 	variance = msq / (numOfIter - 1);
 	std_dev = sqrtf(variance);
 
-	printf("CALIBRATION DATA :%f,%f,%f\n",mean,variance,std_dev);
+	printf("CALIBRATION DATA :mean=%f,variance=%f,std_dev=%f\n",mean,variance,std_dev);
 
 	mpu_data->mean = mean;
 	mpu_data->variance = variance;

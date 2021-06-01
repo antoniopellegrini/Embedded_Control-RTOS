@@ -58,9 +58,9 @@
 
 //variabili per HAL_GPIO_EXTI_Callback
 
-uint8_t debug_active = 1;
+uint8_t debug_active = 0;
 uint8_t telemetry_enabled = 1;
-uint8_t is_Master = 0;   // 0 --> slave; 1--> master
+uint8_t is_Master = 1;   // 0 --> slave; 1--> master
 //if timer interrupt is enabled leave this in slave mode
 
 int softError = 0;
@@ -1025,7 +1025,9 @@ void InitTaskFunc(void const * argument)
 
 			if(osSemaphoreWait(MissionTimerSemHandle, osWaitForever) == HAL_OK){
 
+
 				mission_data.timer ++;
+				printf("Mission timer %d\n",mission_data.timer);
 
 				if (mission_data.timer == 0 && !in_powered_ascent){
 
