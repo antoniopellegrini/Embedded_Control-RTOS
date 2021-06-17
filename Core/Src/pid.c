@@ -6,9 +6,10 @@
  */
 
 #include "pid.h"
+#include "math.h"
 
 
-int PID_Calculate(hpid * hpid, float current_time ,float current_angle, float desired_angle, float kp, float ki, float kd){
+int PID_Calculate(hpid * hpid, float current_time ,float current_angle, float desired_angle, float kp, float ki, float kd, float multiplier){
 
 
 
@@ -37,7 +38,7 @@ int PID_Calculate(hpid * hpid, float current_time ,float current_angle, float de
 
 	//calculate pid and direction (rigth - left)
 
-	hpid->calculated_pid = hpid->P + hpid->I_prev + hpid->D;
+	hpid->calculated_pid = (hpid->P + hpid->I_prev + hpid->D) * multiplier;
 
 	if ( fabs(hpid->calculated_pid) > 4000.0  ){
 		hpid->calculated_pid = (hpid->calculated_pid>=0) ? 4000 : - 4000 ;
