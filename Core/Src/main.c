@@ -45,22 +45,8 @@
 
 /*	TODO se si rigenera il codice:
  *
- * 	1. copia questo codice dopo MX_FREERTOS_Init()
-
-			if(is_Master){
-			printf("MPU is Master, stating timer...\n");
-			HAL_TIM_Base_Start_IT(&htim2); // custom: init timer for timer interrupt
-		}else{
-			printf("MPU is Slave, waiting for interrupt...\n");
-		}
-
-  	2. Setta la funzione HAL_TIM_PeriodElapsedCallback come __weak
  *
- *
- *
- *
- *
- *
+ * 	1. Setta la funzione HAL_TIM_PeriodElapsedCallback come __weak
  *
  *
  * */
