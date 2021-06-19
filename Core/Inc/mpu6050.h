@@ -48,6 +48,7 @@ typedef struct MPU_Data{
 	float LSB_sensitivity;
 	float last_raw_angle;
 	int16_t Gyro_Z_RAW;
+	uint8_t Rec_Data[2];
 
 }MPU_Data;
 
@@ -55,8 +56,9 @@ typedef struct MPU_Data{
 /* -- functions declarations  -- */
 
 MPU6050_StatusTypeDef MPU6050_Init(MPU_Data * mpu_data,uint8_t gyro_fs);
-void MPU6050_Read_Gyro (MPU_Data * mpu_data);
-void MPU6050_Calculate_IMU_Error(MPU_Data * mpu_data, int seconds);
-
+//void MPU6050_Read_Gyro (MPU_Data * mpu_data);
+MPU6050_StatusTypeDef MPU6050_Read_Gyro ( MPU_Data * mpu_data);
+//void MPU6050_Calculate_IMU_Error(MPU_Data * mpu_data, int seconds);
+MPU6050_StatusTypeDef MPU6050_Calculate_IMU_Error( MPU_Data * mpu_data, int seconds);
 
 #endif /* INC_MPU6050_H_ */

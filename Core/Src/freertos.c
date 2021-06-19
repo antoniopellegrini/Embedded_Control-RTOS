@@ -87,12 +87,12 @@ typedef struct Telemetry_Data{
 
 } Telemetry_Data;
 
-typedef struct mission_data{
+typedef struct State_Data{
 	int timer;
 	int state;
 	uint8_t is_master;
 
-} mission_data;
+} State_Data;
 
 typedef struct Mission_Data{
 	float desired_angle;
@@ -709,13 +709,7 @@ void SensorReadFunc(void const * argument)
   /* USER CODE BEGIN SensorReadFunc */
 	/* Infinite loop */
 
-
-
 	Angle_Data angle_data;
-
-
-
-
 	MPU_Data mpu_data;
 
 	osEvent event = osMessageGet(MpuDataQueueHandle, osWaitForever);
@@ -747,14 +741,13 @@ void SensorReadFunc(void const * argument)
 				elapsed_time = current_time - previous_time;
 				previous_time = current_time;
 
-
 				MPU6050_Read_Gyro(&mpu_data);
 				yaw =  yaw + ((mpu_data.last_raw_angle - mpu_data.mean) * (float) elapsed_time * 0.001); // elapsedTime/1000 to get seconds
 
 				angle_data.angle.f[0] = yaw;
 				angle_data.crc = HAL_CRC_Calculate(&hcrc, angle_data.angle.i,1);
 
-				/* Send angle to P1 and P2 */
+				/* Send angles to P1 and P2 */
 				osMessagePut(Sensor1QueueHandle, (uint32_t) &angle_data, 100);
 				osMessagePut(Sensor2QueueHandle, (uint32_t) &angle_data, 100);
 
@@ -782,10 +775,10 @@ void InitTaskFunc(void const * argument)
 
 	//board settings
 
-	mission_data mission_data;
-	mission_data.is_master = 1; // 0 --> slave; 1--> master
-	mission_data.timer = -5;  //countdown start
-	mission_data.state = 0;
+	State_Data state_data;
+	state_data.is_master = 1; // 0 --> slave; 1--> master
+	state_data.timer = -5;  //countdown start
+	state_data.state = 0;
 
 	uint8_t telemetry_enabled = 1;
 	uint8_t in_powered_ascent = 0;
@@ -797,37 +790,33 @@ void InitTaskFunc(void const * argument)
 	for(;;)
 	{
 
-		switch(mission_data.state)
+		switch(state_data.state)
 		{
 
-		//CASE 0: Init MPU
+
 
 		case 0:
-			mission_data.state=0;
-
+			/* Initialize MPU6050 */
 
 			if(MPU6050_Init(&mpu_data, 3) == MPU_OK)
 			{
 
 				printf("[MPU6050] init DONE!\n");
-				mission_data.state = 1;
+				state_data.state = 1;
 				break;
 
 			} else {
 
 				printf("[MPU6050] init Failed!\r\n");
-				mission_data.state = -1;
+				state_data.state = -1;
 				break;
 			}
 
 
-
-			//CASE 1: aspetto il comando di via, di ricalibrazione o di abort
-
 		case 1:
+			/* Wait for commands: calibration or start countdown */
 
 			get_I2C_confermation((uint8_t *)"[MPU] Wait for command", receiveBuf);
-
 
 
 			if ( receiveBuf[0] == 1)
@@ -849,7 +838,7 @@ void InitTaskFunc(void const * argument)
 			{
 				printf("command 2: starting mission countdown\n");
 
-				mission_data.state = 2;
+				state_data.state = 2;
 				break;
 
 			}
@@ -859,7 +848,7 @@ void InitTaskFunc(void const * argument)
 			if (receiveBuf[0] == -1)
 			{
 				printf("command -1: ABORT\n");
-				mission_data.state = -1;
+				state_data.state = -1;
 				break;
 
 			}
@@ -868,8 +857,6 @@ void InitTaskFunc(void const * argument)
 		case 2:
 
 
-			//start MISSION timer
-
 			HAL_TIM_Base_Start_IT(&htim7);
 
 			if(telemetry_enabled)
@@ -877,23 +864,19 @@ void InitTaskFunc(void const * argument)
 				osThreadResume(TelemetryThreadHandle);
 			}
 
-			mission_data.state = 3;
+			state_data.state = 3;
 			break;
 
-
-
 		case 3:
-
-
 
 
 			if(osSemaphoreWait(MissionTimerSemHandle, osWaitForever) == HAL_OK)
 			{
 
-				mission_data.timer ++;
-				osMessagePut(MissionDataQueueHandle, (uint32_t) &mission_data, 0);
+				state_data.timer ++;
+				osMessagePut(MissionDataQueueHandle, (uint32_t) &state_data, 0);
 
-				if (mission_data.timer == 0 && !in_powered_ascent)
+				if (state_data.timer == 0 && !in_powered_ascent)
 				{
 
 					//set alive to true
@@ -926,7 +909,7 @@ void InitTaskFunc(void const * argument)
 					osMessagePut(MewMissionP1QueueHandle, (uint32_t) &new_m_data, osWaitForever);
 					osMessagePut(MewMissionP2QueueHandle, (uint32_t) &new_m_data, osWaitForever);
 
-					if(mission_data.is_master)
+					if(state_data.is_master)
 					{
 
 						int status = HAL_TIM_Base_Start_IT(&htim2);
@@ -938,7 +921,7 @@ void InitTaskFunc(void const * argument)
 
 						} else {
 							printf("[OS] Timer failed to start - aborting.\r\n");
-							mission_data.state = -1;
+							state_data.state = -1;
 							break;
 						}
 					}
@@ -947,13 +930,13 @@ void InitTaskFunc(void const * argument)
 				}
 
 
-				if (mission_data.timer == 30)
+				if (state_data.timer == 30)
 				{
 
 					//set alive to false
 					HAL_GPIO_WritePin(Alive_GPIO_Port, Alive_Pin, MOTOR_OFF);
 
-					mission_data.state = 4;
+					state_data.state = 4;
 
 					break;
 				}
@@ -974,7 +957,7 @@ void InitTaskFunc(void const * argument)
 
 			osDelay(5000);
 
-			if (mission_data.is_master)
+			if (state_data.is_master)
 				HAL_TIM_Base_Stop_IT(&htim2);
 
 			osThreadSuspend(SensorReadHandle);
@@ -991,15 +974,13 @@ void InitTaskFunc(void const * argument)
 
 		case -1:
 
-			mission_data.state=-1;
+			state_data.state=-1;
 			printf("[state = ABORT]\n");
 
 			osThreadSuspendAll();
 
 			break;
 		}
-
-
 
 		osDelay(1);
 	}
@@ -1024,7 +1005,8 @@ void TelemetryThreadFunc(void const * argument)
 
 	Telemetry_Data telemetry_p1, telemetry_p2;
 	char msg[64];
-	mission_data m_data;
+	State_Data m_data;
+
 	float unused = 0.0f;
 
 	/* Infinite loop */
@@ -1041,7 +1023,7 @@ void TelemetryThreadFunc(void const * argument)
 		osEvent event = osMessageGet(MissionDataQueueHandle, 0);
 		if (event.status == osEventMessage)
 		{
-			m_data = *((mission_data *) event.value.v);
+			m_data = *((State_Data *) event.value.v);
 		}
 
 

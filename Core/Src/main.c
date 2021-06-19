@@ -88,7 +88,6 @@ void MX_FREERTOS_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	//sample_time = 1000/samples_per_seconds;
 
   /* USER CODE END 1 */
 
@@ -125,9 +124,6 @@ int main(void)
   HAL_DAC_Start(&hdac, DAC_CHANNEL_2);
 
 
-	//MPU6050_Init(3);
-
-	//MPU6050_Calculate_IMU_Error(2);
 
   /* USER CODE END 2 */
 
@@ -139,15 +135,6 @@ int main(void)
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
-
-	//	if(is_Master){
-	//		printf("MPU is Master, stating timer...\n");
-	//		HAL_TIM_Base_Start_IT(&htim2); // custom: init timer for timer interrupt
-	//	}else{
-	//		printf("MPU is Slave, waiting for interrupt...\n");
-	//
-	//	}
 
 
 

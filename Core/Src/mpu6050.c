@@ -88,42 +88,45 @@ MPU6050_StatusTypeDef MPU6050_Init (MPU_Data * mpu_data, uint8_t gyro_fs_select)
 
 }
 
-void MPU6050_Read_Gyro(MPU_Data * mpu_data)
+
+MPU6050_StatusTypeDef MPU6050_Read_Gyro(MPU_Data * mpu_data)//
 {
 
-	uint8_t Rec_Data[6];
-	int16_t Gyro_X_RAW,Gyro_Y_RAW,Gyro_Z_RAW;
+	int16_t Gyro_Z_RAW;
 
 	/* Read 6 BYTES of data starting from GYRO_XOUT_H register*/
-
-	HAL_I2C_Mem_Read (&hi2c2, MPU6050_ADDR, GYRO_XOUT_H_REG, 1, Rec_Data, 6, 1000);
-
-	Gyro_X_RAW = (int16_t)(Rec_Data[0] << 8 | Rec_Data [1]);
-	Gyro_Y_RAW = (int16_t)(Rec_Data[2] << 8 | Rec_Data [3]);
-	Gyro_Z_RAW = (int16_t)(Rec_Data[4] << 8 | Rec_Data [5]);
+	uint8_t status = HAL_I2C_Mem_Read_DMA(&hi2c2, MPU6050_ADDR, GYRO_ZOUT_H_REG, 1, mpu_data->Rec_Data, 2);
 
 
-	/*
-	 * convert the RAW values into dps (°/s)
+	Gyro_Z_RAW = (int16_t)(mpu_data->Rec_Data[0] << 8 | mpu_data->Rec_Data [1]);
+
+
+	/* convert the RAW values into dps (°/s)
 	 *   we have to divide according to the Full scale value set in FS_SEL
 	 *   I have configured FS_SEL = 0. So I am dividing by 131.0
-	 *   for more details check GYRO_CONFIG Register
-	 */
-
+	 *   for more details check GYRO_CONFIG Register */
 	mpu_data->last_raw_angle =  Gyro_Z_RAW/mpu_data->LSB_sensitivity;
+
+
+	if(status == 0)
+		return MPU_OK;
+	else
+		return MPU_ERROR;
+
+
 }
 
 
-void MPU6050_Calculate_IMU_Error(MPU_Data * mpu_data, int seconds){
+MPU6050_StatusTypeDef MPU6050_Calculate_IMU_Error(MPU_Data * mpu_data, int seconds){
 
 
 
 	int numOfIter = 200 * seconds;
 	float sum = 0;			//media
-
+	uint8_t status;
 	for(int i = 0; i < numOfIter; i++)
 	{
-		MPU6050_Read_Gyro(mpu_data);
+		status = MPU6050_Read_Gyro(mpu_data);
 		sum = sum + mpu_data->last_raw_angle;
 		HAL_Delay(5);
 	}
@@ -131,6 +134,11 @@ void MPU6050_Calculate_IMU_Error(MPU_Data * mpu_data, int seconds){
 
 
 	mpu_data->mean = sum/numOfIter;
+
+	if(status == 0)
+		return MPU_OK;
+	else
+		return MPU_ERROR;
 
 
 }
