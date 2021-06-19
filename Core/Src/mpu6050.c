@@ -83,9 +83,6 @@ MPU6050_StatusTypeDef MPU6050_Init (MPU_Data * mpu_data, uint8_t gyro_fs_select)
 		return MPU_OK;
 	else
 		return MPU_ERROR;
-
-
-
 }
 
 
@@ -96,8 +93,6 @@ MPU6050_StatusTypeDef MPU6050_Read_Gyro(MPU_Data * mpu_data)//
 
 	/* Read 6 BYTES of data starting from GYRO_XOUT_H register*/
 	uint8_t status = HAL_I2C_Mem_Read_DMA(&hi2c2, MPU6050_ADDR, GYRO_ZOUT_H_REG, 1, mpu_data->Rec_Data, 2);
-
-
 	Gyro_Z_RAW = (int16_t)(mpu_data->Rec_Data[0] << 8 | mpu_data->Rec_Data [1]);
 
 
@@ -107,13 +102,10 @@ MPU6050_StatusTypeDef MPU6050_Read_Gyro(MPU_Data * mpu_data)//
 	 *   for more details check GYRO_CONFIG Register */
 	mpu_data->last_raw_angle =  Gyro_Z_RAW/mpu_data->LSB_sensitivity;
 
-
 	if(status == 0)
 		return MPU_OK;
 	else
 		return MPU_ERROR;
-
-
 }
 
 
@@ -124,6 +116,7 @@ MPU6050_StatusTypeDef MPU6050_Calculate_IMU_Error(MPU_Data * mpu_data, int secon
 	int numOfIter = 200 * seconds;
 	float sum = 0;			//media
 	uint8_t status;
+
 	for(int i = 0; i < numOfIter; i++)
 	{
 		status = MPU6050_Read_Gyro(mpu_data);
@@ -131,14 +124,10 @@ MPU6050_StatusTypeDef MPU6050_Calculate_IMU_Error(MPU_Data * mpu_data, int secon
 		HAL_Delay(5);
 	}
 
-
-
 	mpu_data->mean = sum/numOfIter;
 
 	if(status == 0)
 		return MPU_OK;
 	else
 		return MPU_ERROR;
-
-
 }
