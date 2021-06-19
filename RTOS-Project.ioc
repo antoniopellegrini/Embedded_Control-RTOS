@@ -1,7 +1,7 @@
 #MicroXplorer Configuration settings - do not modify
 Mcu.Family=STM32F4
 ProjectManager.MainLocation=Core/Src
-FREERTOS.Queues01=Sensor1Queue,1,float,0,Dynamic,NULL,NULL;Sensor2Queue,1,float,0,Dynamic,NULL,NULL;P1TelemetryQueue,1,float,0,Dynamic,NULL,NULL;P2TelemetryQueue,1,float,0,Dynamic,NULL,NULL;MissionDataQueue,1,int,0,Dynamic,NULL,NULL;MewMissionP1Queue,1,int,0,Dynamic,NULL,NULL;MewMissionP2Queue,1,int,0,Dynamic,NULL,NULL;MpuDataQueue,1,uint32_t,0,Dynamic,NULL,NULL
+FREERTOS.Queues01=Sensor1Queue,1,float,0,Dynamic,NULL,NULL;Sensor2Queue,1,float,0,Dynamic,NULL,NULL;P1TelemetryQueue,1,float,0,Dynamic,NULL,NULL;P2TelemetryQueue,1,float,0,Dynamic,NULL,NULL;MissionDataQueue,1,int,0,Dynamic,NULL,NULL;MewMissionP1Queue,1,int,0,Dynamic,NULL,NULL;MewMissionP2Queue,1,int,0,Dynamic,NULL,NULL;MpuDataQueue,1,uint32_t,0,Dynamic,NULL,NULL;MissionTimerQueue,1,uint32_t,0,Dynamic,NULL,NULL;TimerSettingsQueue,1,int,0,Dynamic,NULL,NULL
 USART2.IPParameters=VirtualMode,BaudRate
 RCC.CortexFreq_Value=180000000
 FREERTOS.BinarySemaphores01=P1ITSem,Dynamic,NULL;P2ITSem,Dynamic,NULL;MissionTimerSem,Dynamic,NULL;TelemetryThreadSem,Dynamic,NULL
@@ -155,7 +155,7 @@ Dma.Request3=I2C2_RX
 NVIC.BusFault_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:false
 PC4.Locked=true
 PB10.GPIOParameters=GPIO_PuPdOD
-PA12.GPIO_PuPd=GPIO_PULLDOWN
+PA12.GPIO_PuPd=GPIO_NOPULL
 Dma.I2C2_TX.4.RequestParameters=Instance,Direction,PeriphInc,MemInc,PeriphDataAlignment,MemDataAlignment,Mode,Priority,FIFOMode
 RCC.SAIBFreq_Value=96000000
 Dma.Request0=USART2_TX
@@ -173,7 +173,7 @@ SH.COMP_DAC1_group.0=DAC_OUT1,DAC_OUT1
 Dma.I2C3_TX.1.PeriphInc=DMA_PINC_DISABLE
 Dma.I2C2_TX.4.PeriphDataAlignment=DMA_PDATAALIGN_BYTE
 ProjectManager.ProjectFileName=RTOS-Project.ioc
-FREERTOS.Tasks01=defaultTask,-2,512,StartDefaultTask,Default,NULL,Dynamic,NULL,NULL;ThreadP1,0,256,P1EntryFunc,Default,NULL,Dynamic,NULL,NULL;ThreadP2,0,256,P2EntryFunc,Default,NULL,Dynamic,NULL,NULL;SensorRead,0,256,SensorReadFunc,Default,NULL,Dynamic,NULL,NULL;InitTask,1,512,InitTaskFunc,Default,NULL,Dynamic,NULL,NULL;TelemetryThread,-1,512,TelemetryThreadFunc,Default,NULL,Dynamic,NULL,NULL
+FREERTOS.Tasks01=defaultTask,-2,512,StartDefaultTask,Default,NULL,Dynamic,NULL,NULL;ThreadP1,0,256,P1EntryFunc,Default,NULL,Dynamic,NULL,NULL;ThreadP2,0,256,P2EntryFunc,Default,NULL,Dynamic,NULL,NULL;SensorRead,0,256,SensorReadFunc,Default,NULL,Dynamic,NULL,NULL;InitTask,1,512,InitTaskFunc,Default,NULL,Dynamic,NULL,NULL;TelemetryThread,-1,512,TelemetryThreadFunc,Default,NULL,Dynamic,NULL,NULL;MissionTimerTas,2,256,MissionTimerTaskFunc,Default,NULL,Dynamic,NULL,NULL
 Dma.USART2_TX.0.MemInc=DMA_MINC_ENABLE
 Mcu.PinsNb=23
 Dma.I2C2_RX.3.Instance=DMA1_Stream2

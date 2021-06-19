@@ -57,6 +57,6 @@ typedef struct MPU_Data{
 
 MPU6050_StatusTypeDef MPU6050_Init(MPU_Data * mpu_data,uint8_t gyro_fs);
 MPU6050_StatusTypeDef MPU6050_Read_Gyro ( MPU_Data * mpu_data);
-MPU6050_StatusTypeDef MPU6050_Calculate_IMU_Error( MPU_Data * mpu_data, int seconds);
+MPU6050_StatusTypeDef MPU6050_Calibration( MPU_Data * mpu_data, int seconds);
 
 #endif /* INC_MPU6050_H_ */

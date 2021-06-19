@@ -109,7 +109,7 @@ MPU6050_StatusTypeDef MPU6050_Read_Gyro(MPU_Data * mpu_data)//
 }
 
 
-MPU6050_StatusTypeDef MPU6050_Calculate_IMU_Error(MPU_Data * mpu_data, int seconds){
+MPU6050_StatusTypeDef MPU6050_Calibration(MPU_Data * mpu_data, int seconds){
 
 
 
