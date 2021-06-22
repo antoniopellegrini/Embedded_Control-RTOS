@@ -16,8 +16,7 @@
 #endif /* __GNUC__ */
 PUTCHAR_PROTOTYPE
 {
-	//HAL_UART_Transmit_DMA(&huart2, (uint8_t *)&ch, strlen(ch));
-	HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1,0x0001);
+	HAL_UART_Transmit(&huart3, (uint8_t *)&ch, 1,0x0001);
 	return ch;
 }
 

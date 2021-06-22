@@ -31,7 +31,7 @@
 //int ARR = 899999;
 //float Tc = 0.02;  //tempo di campionamento desiderato [ms]
 //
-//float PSC = ((freq * Tc(s)) / (1 + ARR)) - 1;
+//uint32_t PSC = ((freq * Tc(s)) / (1 + ARR)) - 1;
 //8999999 100 ms
 
 
