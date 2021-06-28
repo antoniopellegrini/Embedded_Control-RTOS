@@ -25,7 +25,7 @@ typedef struct hpid{
 
 //functions prototypes
 
-int PID_Calculate(hpid * hpid, float current_time ,float current_angle, float desired_angle, float kp, float ki, float kd, float multiplier);
+int PID_Calculate(hpid * hpid, float elapsed_time ,float current_angle, float desired_angle, float kp, float ki, float kd, float multiplier);
 float PID_Get_Actuation(hpid * hpid);
 int PID_Get_Direction(hpid * hpid);
 

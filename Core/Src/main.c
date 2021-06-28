@@ -44,15 +44,8 @@
 /* USER CODE BEGIN PD */
 
 /*	TODO se si rigenera il codice:
- *
- *
  * 	1. Setta la funzione HAL_TIM_PeriodElapsedCallback come __weak
- *
- *
- * */
-
-
-
+ */
 
 /* USER CODE END PD */
 
@@ -212,7 +205,7 @@ void SystemClock_Config(void)
   * @param  htim : TIM handle
   * @retval None
   */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+__weak void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   /* USER CODE BEGIN Callback 0 */
 
