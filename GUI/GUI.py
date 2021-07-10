@@ -3,9 +3,11 @@ from telemetry import telemetry
 from New_turtle import Plot
 from tkinter import *
 import threading
+import pandas as pd
+from scipy.stats import zscore
+import numpy as np
 import time
 from tkinter import ttk
-
 
 class Application(tk.Frame):
 
@@ -26,6 +28,34 @@ class Application(tk.Frame):
 
         #self.Output.insert(END, )
         #self.Output.insert(END, "ask")
+
+    def Send_cmd_0(self):
+
+        # INPUT = inputtxt.get("1.0", "end-1c")
+        print("Taking Input")
+
+        self.tele_data_2 = self.t.communicate(0)
+        self.Output.insert(END, self.tele_data_2)
+
+        print(f" DATIII {self.tele_data_2}")
+
+    def Send_cmd_1(self):
+        # INPUT = inputtxt.get("1.0", "end-1c")
+        print("Taking Input")
+
+        self.tele_data_2 = self.t.communicate(1)
+        self.Output.insert(END, self.tele_data_2)
+
+        print(f" DATIII {self.tele_data_2}")
+
+    def Send_cmd_2(self):
+        # INPUT = inputtxt.get("1.0", "end-1c")
+        print("Taking Input")
+
+        self.tele_data_2 = self.t.communicate(2)
+        self.Output.insert(END, self.tele_data_2)
+
+        print(f" DATIII {self.tele_data_2}")
 
 
 
@@ -104,7 +134,7 @@ class Application(tk.Frame):
 
         self.quit_graph = False
 
-        root.geometry("400x500")
+        root.geometry("500x500")
         root.title(" Rocket Control GUI ")
 
     def Clear(self):
@@ -123,10 +153,34 @@ class Application(tk.Frame):
 
             self.g.update(self.B1_direction, self.B2_direction, self.direction, self.time, self.is_started)
 
+    def Plotting(self):
 
+        def clean(direction):
+            dir = df[[direction]].values
+            diffs = [np.abs(dir[i] - dir[i + 1]) for i in range(len(dir) - 1)]
+            dir_cleaned = np.full(dir.shape, np.nan)  # create a array full of NaNs
+            dir_cleaned[0] = dir[0]  # The first value isn't a outlier
+
+            for i in range(1, len(dir)):    # remove outliers
+                if np.abs(dir[i] - dir[i - 1]) < np.std(diffs) * 30  and dir[i] < 1.6 * np.mean(dir):
+                    dir_cleaned[i] = dir[i]
+
+            return dir_cleaned
+
+        df = pd.read_csv('Log_file.txt')
+        dir_1 = clean('dir1')
+        dir_2 = clean('dir2')
+
+        #df2 = pd.DataFrame(df, columns=['direction', 'dir1', 'dir2', 'time'])
+        df2 = pd.DataFrame(df, columns=['direction', 'time'])
+        merge = pd.concat([df2, pd.DataFrame(dir_1, columns=['dir_1_clean']),
+                           pd.DataFrame(dir_2, columns=['dir_2_clean'])], axis=1)
+        # pd.DataFrame({'dir_1_clean': list(dir_1)})
+        merge.plot(x='time', use_index=True, ylabel="degree", grid=True)
 
 
     def QuitAll(self):
+        self.Plotting()
         self.quit_graph = True
         self.master.destroy()
 
@@ -142,6 +196,9 @@ class Application(tk.Frame):
             if status:
                 self.open.configure(state=ACTIVE)
                 self.close.configure(state=ACTIVE)
+                self.btn_0.configure(state=ACTIVE)
+                self.btn_1.configure(state=ACTIVE)
+                self.btn_2.configure(state=ACTIVE)
                 self.entrythingy.configure(state="normal")
                 #self.entrythingy.bind('<Key-Return>', self.print_contents)
                 state("Connected!")
@@ -154,6 +211,9 @@ class Application(tk.Frame):
                 self.open.configure(state=DISABLED)
                 self.close.configure(state=DISABLED)
                 self.entrythingy.configure(state=DISABLED)
+                self.btn_0.configure(state=DISABLED)
+                self.btn_1.configure(state=DISABLED)
+                self.btn_2.configure(state=DISABLED)
                 #self.entrythingy.bind("<Key>", lambda e: "break")  # Disable characters from keyboard
                 state("NOT Connected!")
 
@@ -179,6 +239,11 @@ class Application(tk.Frame):
 
     def Close(self):
         self.t.close()
+        self.g.clear_window()
+        self.btn_0.configure(state=DISABLED)
+        self.btn_1.configure(state=DISABLED)
+        self.btn_2.configure(state=DISABLED)
+
 
 
 
@@ -227,7 +292,19 @@ class Application(tk.Frame):
         self.close.pack(side='right')
 
         self.quit = tk.Button(self, text="QUIT", fg="red", command=self.QuitAll)
-        self.quit.pack(side="bottom")
+        self.quit.pack(side="right")
+
+        self.btn_0 = tk.Button(self, text="0-New_Cmd", fg="green", command=self.Send_cmd_0 )
+        self.btn_0.configure(state=DISABLED)
+        self.btn_0.pack(side='top')
+
+        self.btn_1 = tk.Button(self, text="1-Calibrate", fg="green", command=self.Send_cmd_1)
+        self.btn_1.configure(state=DISABLED)
+        self.btn_1.pack(side='top')
+
+        self.btn_2 = tk.Button(self, text="2-Start", fg="green", command=self.Send_cmd_2)
+        self.btn_2.configure(state=DISABLED)
+        self.btn_2.pack(side='top')
 
 
     def say_hi(self):

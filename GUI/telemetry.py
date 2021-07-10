@@ -61,10 +61,11 @@ class telemetry:
         if not self.port:
             self.port = find_arduino_port()
         else:
-            if check():
-                print("port still connected")
-            else:
-                self.port = find_arduino_port()
+            if not self.port:
+                if check():
+                    print("port still connected")
+                else:
+                    self.port = find_arduino_port()
 
 
         if self.port:

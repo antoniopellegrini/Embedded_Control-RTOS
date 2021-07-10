@@ -53,9 +53,17 @@ class Plot:
         self.line.shape('line')
         self.line.color('red')
         # rocket.showturtle()
+        self.log_file = "Log_file.txt"
+        f = open(self.log_file, "w")   # reset file log?
+        f.write('direction,dir1,dir2,time\n')
+        f.close()
+
 
     def quit_window(self):
         self.window.bye()
+
+    def clear_window(self):
+        self.window.clear()
 
     def set_angle(self):
         self.Initial_time_angle = time.time()
@@ -118,19 +126,22 @@ class Plot:
                 # self.timer_text.write(f' T: {time}', font=('Courier', 30, "normal"))
                 self.timer_text.color('Green')
 
-
-
-
-        self.line.tiltangle(self.direction_angle)
-        #self.timer_text.clear()
-        #self.timer_text.write(f'T: {time}', font=('Courier', 30, "normal"))
+        self.line.tiltangle(self.direction_angle)   # red line of direction
+        # self.timer_text.clear()
+        # self.timer_text.write(f'T: {time}', font=('Courier', 30, "normal"))
 
         if self.elapsed_time < 30.0 and self.elapsed_time > 0:
-            #self.timer_text.write(f'T: {self.elapsed_time}', font=('Courier', 30, "normal"))
+            # self.timer_text.write(f'T: {self.elapsed_time}', font=('Courier', 30, "normal"))
             pass
         elif self.elapsed_time >= 30.0:
             pass
-            #self.timer_text.write(f'T: {self.elapsed_time} \n Mission END', font=('Courier', 30, "normal"))
+            # self.timer_text.write(f'T: {self.elapsed_time} \n Mission END', font=('Courier', 30, "normal"))
+        if self.elapsed_time != 0.0:
+            f = open(self.log_file, "a")
+            log = (str(self.direction_angle) + "," + str(rocket_angle_1) + "," + str(rocket_angle_2) +
+                   "," + str(round(self.elapsed_time, 2)) + "\n")
+            f.write(log)
+            f.close()
 
         self.timer_text.color('Red')
         self.window.update()
