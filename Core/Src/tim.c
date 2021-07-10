@@ -24,14 +24,14 @@
 
 //Tc = 20ms
 //	Period = 899999
-// 	Prescaler = 2
+// 	Prescaler = 1
 
 //int freq = 90000000;  // APB1 Timer Clock f = HAL_RCC_GetPCLK1Freq() * 2;
 //
 //int ARR = 899999;
 //float Tc = 0.02;  //tempo di campionamento desiderato [ms]
 //
-//float PSC = ((freq * Tc(s)) / (1 + ARR)) - 1;
+//uint32_t PSC = ((freq * Tc(s)) / (1 + ARR)) - 1;
 //8999999 100 ms
 
 
@@ -43,13 +43,21 @@ TIM_HandleTypeDef htim7;
 /* TIM2 init function */
 void MX_TIM2_Init(void)
 {
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
 
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 0;
+  htim2.Init.Prescaler = 1;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 89999;
+  htim2.Init.Period = 899999;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -67,13 +75,24 @@ void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
 
 }
 /* TIM7 init function */
 void MX_TIM7_Init(void)
 {
+
+  /* USER CODE BEGIN TIM7_Init 0 */
+
+  /* USER CODE END TIM7_Init 0 */
+
   TIM_MasterConfigTypeDef sMasterConfig = {0};
 
+  /* USER CODE BEGIN TIM7_Init 1 */
+
+  /* USER CODE END TIM7_Init 1 */
   htim7.Instance = TIM7;
   htim7.Init.Prescaler = 1799;
   htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
@@ -89,6 +108,9 @@ void MX_TIM7_Init(void)
   {
     Error_Handler();
   }
+  /* USER CODE BEGIN TIM7_Init 2 */
+
+  /* USER CODE END TIM7_Init 2 */
 
 }
 

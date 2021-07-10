@@ -44,29 +44,8 @@
 /* USER CODE BEGIN PD */
 
 /*	TODO se si rigenera il codice:
- *
- * 	1. copia questo codice dopo MX_FREERTOS_Init()
-
-			if(is_Master){
-			printf("MPU is Master, stating timer...\n");
-			HAL_TIM_Base_Start_IT(&htim2); // custom: init timer for timer interrupt
-		}else{
-			printf("MPU is Slave, waiting for interrupt...\n");
-		}
-
-  	2. Setta la funzione HAL_TIM_PeriodElapsedCallback come __weak
- *
- *
- *
- *
- *
- *
- *
- *
- * */
-
-
-
+ * 	1. Setta la funzione HAL_TIM_PeriodElapsedCallback come __weak
+ */
 
 /* USER CODE END PD */
 
@@ -102,7 +81,6 @@ void MX_FREERTOS_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	//sample_time = 1000/samples_per_seconds;
 
   /* USER CODE END 1 */
 
@@ -126,22 +104,18 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_I2C1_Init();
-  MX_USART2_UART_Init();
   MX_DAC_Init();
   MX_TIM2_Init();
   MX_CRC_Init();
   MX_I2C2_Init();
   MX_TIM7_Init();
   MX_I2C3_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
   HAL_DAC_Start(&hdac, DAC_CHANNEL_2);
 
 
-	//MPU6050_Init(3);
-
-	//MPU6050_Calculate_IMU_Error(2);
 
   /* USER CODE END 2 */
 
@@ -153,15 +127,6 @@ int main(void)
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
-
-	//	if(is_Master){
-	//		printf("MPU is Master, stating timer...\n");
-	//		HAL_TIM_Base_Start_IT(&htim2); // custom: init timer for timer interrupt
-	//	}else{
-	//		printf("MPU is Slave, waiting for interrupt...\n");
-	//
-	//	}
 
 
 

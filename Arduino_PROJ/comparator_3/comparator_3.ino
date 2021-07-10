@@ -3,7 +3,7 @@
 #define debug 0
 
 #define initial_delay 10000
-#define margin 100 // margine valori tra stessa scheda
+#define margin 140 // margine valori tra stessa scheda
 #define outer_margin 40 // margine valori tra 2 schede
 
 #define B1_P1_analog A0
@@ -79,11 +79,11 @@ void setup() {
     Serial.println("waiting for board alive");
     alive1 = !digitalRead(B1_alive); 
     alive2 = !digitalRead(B2_alive); 
-    delay(10);
+    //delay(10);
   }
 
 
-  delay(1000);
+  //delay(1000);
     
   // Serial.print("servo at position: ");
   // Serial.println(myservo.read());  
@@ -185,7 +185,8 @@ int compare_values(int alive_status){  // compare values from different boards
   }
 
   if (alive_status == 0){ // all alive
-    if( abs(A1B1 - A1B2) < margin && abs(A1B2 - A2B2) < margin  && D1B1^D1B2==0  ){
+    if( abs(A1B1 - A1B2) < margin && abs(A1B2 - A2B2) < margin  && D1B1^D1B2==0  )
+    {
       //if( abs(A1B1 - A1B2) < outer_margin){ 
       if( ( abs(A1B1 - A2B1) - abs(A1B2 - A2B2)) < outer_margin){   // TODO: NOT TESTED YET
         return 0;
@@ -272,7 +273,7 @@ void loop() {
   if (true){
 
     // -------- B1 ---------
-    Serial.print(" , D1B1: ");
+    Serial.print("D1B1: ");
     Serial.print(D1B1);
     Serial.print(" , D2B1: ");
     Serial.print(D2B1);
@@ -298,7 +299,7 @@ void loop() {
     Serial.print(alive2);
     Serial.print(" , Servo: ");
     Serial.print(value);
-    Serial.println(" , ");
+    Serial.println("");
   }
 
 
